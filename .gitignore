@@ -1,0 +1,22 @@
+# Archivos generados por Visual Studio y .NET
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos locales y datos generados al ejecutar la API
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+**/wwwroot/uploads/
+verificacion/archivos-prueba/
+*.log
+*.mdf
+*.ldf
+*.bak
+*.pubxml.user

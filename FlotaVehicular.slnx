@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FlotaVehicular.Domain/FlotaVehicular.Domain.csproj" />
+  <Project Path="FlotaVehicular.Infrastructure/FlotaVehicular.Infrastructure.csproj" />
+  <Project Path="FlotaVehicular.Application/FlotaVehicular.Application.csproj" />
+  <Project Path="FlotaVehicular.WebAPI/FlotaVehicular.WebAPI.csproj" />
+</Solution>
