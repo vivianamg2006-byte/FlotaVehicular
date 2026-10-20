@@ -157,5 +157,54 @@ public static class MapsterConfig
             .Ignore(dest => dest.SparePart)
             .Ignore(dest => dest.Supplier)
             .Ignore(dest => dest.AssociatedAt);
+
+        // Especialidades
+        TypeAdapterConfig<Specialty, SpecialtyListDto>
+            .NewConfig()
+            .Map(dest => dest.TechnicianCount, src => src.TechnicianSpecialties.Count);
+
+        // El detalle incluye los técnicos certificados en la especialidad.
+        TypeAdapterConfig<Specialty, SpecialtyDetailDto>
+            .NewConfig()
+            .Map(dest => dest.TechnicianCount, src => src.TechnicianSpecialties.Count)
+            .Map(dest => dest.Technicians, src => src.TechnicianSpecialties
+                .Select(ts => new TechnicianSpecialtyListDto
+                {
+                    IdTechnician = ts.IdTechnician,
+                    TechnicianName = ts.Technician.FullName,
+                    IdentificationNumber = ts.Technician.IdentificationNumber,
+                    TechnicianActive = ts.Technician.IsActive,
+                    IdSpecialty = ts.IdSpecialty,
+                    SpecialtyName = src.Name,
+                    CertificationLevel = ts.CertificationLevel,
+                    SinceDate = ts.SinceDate
+                })
+                .OrderBy(x => x.TechnicianName)
+                .ToList());
+
+        TypeAdapterConfig<SpecialtyCreateDto, Specialty>
+            .NewConfig()
+            .Ignore(dest => dest.IdSpecialty)
+            .Ignore(dest => dest.TechnicianSpecialties)
+            .Ignore(dest => dest.MaintenanceOrders);
+
+        TypeAdapterConfig<SpecialtyUpdateDto, Specialty>
+            .NewConfig()
+            .Ignore(dest => dest.IdSpecialty)
+            .Ignore(dest => dest.TechnicianSpecialties)
+            .Ignore(dest => dest.MaintenanceOrders);
+
+        // Relación entre técnicos y especialidades
+        TypeAdapterConfig<TechnicianSpecialty, TechnicianSpecialtyListDto>
+            .NewConfig()
+            .Map(dest => dest.TechnicianName, src => src.Technician.FullName)
+            .Map(dest => dest.IdentificationNumber, src => src.Technician.IdentificationNumber)
+            .Map(dest => dest.TechnicianActive, src => src.Technician.IsActive)
+            .Map(dest => dest.SpecialtyName, src => src.Specialty.Name);
+
+        TypeAdapterConfig<TechnicianSpecialtyCreateDto, TechnicianSpecialty>
+            .NewConfig()
+            .Ignore(dest => dest.Technician)
+            .Ignore(dest => dest.Specialty);
     }
 }
