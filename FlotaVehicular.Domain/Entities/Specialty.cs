@@ -7,4 +7,5 @@ public class Specialty
     public string? Description { get; set; }
 
     public virtual ICollection<TechnicianSpecialty> TechnicianSpecialties { get; set; } = new List<TechnicianSpecialty>();
+    public virtual ICollection<MaintenanceOrder> MaintenanceOrders { get; set; } = new List<MaintenanceOrder>();
 }
