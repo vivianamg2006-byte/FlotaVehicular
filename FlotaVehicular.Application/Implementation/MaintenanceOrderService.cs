@@ -34,6 +34,15 @@ public class MaintenanceOrderService : IMaintenanceOrderService
         return Result<IEnumerable<MaintenanceOrderListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    public async Task<Result<IEnumerable<MaintenanceOrderListDto>>> GetAllAsync(MaintenanceOrderQueryDto query)
+    {
+        var orders = await _repository.GetAllAsync(query);
+
+        var data = _mapper.Map<IEnumerable<MaintenanceOrderListDto>>(orders);
+
+        return Result<IEnumerable<MaintenanceOrderListDto>>.Success(data);
+    }
+
     public async Task<Result<MaintenanceOrderDetailDto>> GetByIdAsync(int id)
     {
         var order = await _repository.GetByIdAsync(id);

@@ -6,6 +6,7 @@ namespace FlotaVehicular.Application.Interfaces;
 public interface IMaintenanceOrderService
 {
     Task<Result<IEnumerable<MaintenanceOrderListDto>>> GetPagedAsync(MaintenanceOrderQueryDto query);
+    Task<Result<IEnumerable<MaintenanceOrderListDto>>> GetAllAsync(MaintenanceOrderQueryDto query);
     Task<Result<MaintenanceOrderDetailDto>> GetByIdAsync(int id);
     Task<Result<MaintenanceOrderDetailDto>> AddAsync(MaintenanceOrderCreateDto order);
 }

@@ -46,6 +46,12 @@ public class MaintenanceOrderRepository : IMaintenanceOrderRepository
             .Take(query.PageSize)
             .ToListAsync();
 
+    public async Task<IEnumerable<MaintenanceOrder>> GetAllAsync(MaintenanceOrderQueryDto query)
+        => await ApplyFilters(BaseQuery(), query)
+            .OrderByDescending(o => o.RequestDate)
+            .ThenByDescending(o => o.IdMaintenanceOrder)
+            .ToListAsync();
+
     public async Task<int> CountAsync(MaintenanceOrderQueryDto query)
         => await ApplyFilters(_context.MaintenanceOrder.AsNoTracking(), query).CountAsync();
 

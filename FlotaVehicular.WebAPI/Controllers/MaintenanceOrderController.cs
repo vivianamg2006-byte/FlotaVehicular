@@ -15,6 +15,13 @@ public class MaintenanceOrderController : ControllerBase
         _service = service;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync([FromQuery] MaintenanceOrderQueryDto query)
+    {
+        var result = await _service.GetAllAsync(query);
+        return StatusCode(result.Status, result);
+    }
+
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] MaintenanceOrderQueryDto query)
     {
