@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<SparePartSupplier> SparePartSupplier { get; set; }
     public DbSet<Specialty> Specialty { get; set; }
     public DbSet<Technician> Technician { get; set; }
+    public DbSet<TechnicianSpecialty> TechnicianSpecialty { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

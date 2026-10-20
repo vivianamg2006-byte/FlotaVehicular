@@ -16,4 +16,6 @@ public class Technician
     public bool IsActive { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public virtual ICollection<TechnicianSpecialty> TechnicianSpecialties { get; set; } = new List<TechnicianSpecialty>();
 }
