@@ -206,5 +206,43 @@ public static class MapsterConfig
             .NewConfig()
             .Ignore(dest => dest.Technician)
             .Ignore(dest => dest.Specialty);
+
+        // Técnicos
+        TypeAdapterConfig<Technician, TechnicianListDto>
+            .NewConfig()
+            .Map(dest => dest.SpecialtyCount, src => src.TechnicianSpecialties.Count);
+
+        // El detalle incluye las especialidades certificadas del técnico.
+        TypeAdapterConfig<Technician, TechnicianDetailDto>
+            .NewConfig()
+            .Map(dest => dest.SpecialtyCount, src => src.TechnicianSpecialties.Count)
+            .Map(dest => dest.Specialties, src => src.TechnicianSpecialties
+                .Select(ts => new TechnicianSpecialtyListDto
+                {
+                    IdTechnician = ts.IdTechnician,
+                    TechnicianName = src.FullName,
+                    IdentificationNumber = src.IdentificationNumber,
+                    TechnicianActive = src.IsActive,
+                    IdSpecialty = ts.IdSpecialty,
+                    SpecialtyName = ts.Specialty.Name,
+                    CertificationLevel = ts.CertificationLevel,
+                    SinceDate = ts.SinceDate
+                })
+                .OrderBy(x => x.SpecialtyName)
+                .ToList());
+
+        TypeAdapterConfig<TechnicianCreateDto, Technician>
+            .NewConfig()
+            .Ignore(dest => dest.IdTechnician)
+            .Ignore(dest => dest.CreatedAt)
+            .Ignore(dest => dest.IsActive)
+            .Ignore(dest => dest.TechnicianSpecialties);
+
+        TypeAdapterConfig<TechnicianUpdateDto, Technician>
+            .NewConfig()
+            .Ignore(dest => dest.IdTechnician)
+            .Ignore(dest => dest.CreatedAt)
+            .Ignore(dest => dest.IsActive)
+            .Ignore(dest => dest.TechnicianSpecialties);
     }
 }

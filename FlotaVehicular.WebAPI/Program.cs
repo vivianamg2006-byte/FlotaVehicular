@@ -79,6 +79,8 @@ builder.Services.AddScoped<ISparePartSupplierRepository, SparePartSupplierReposi
 builder.Services.AddScoped<ISparePartSupplierService, SparePartSupplierService>();
 builder.Services.AddScoped<ISpecialtyRepository, SpecialtyRepository>();
 builder.Services.AddScoped<ISpecialtyService, SpecialtyService>();
+builder.Services.AddScoped<ITechnicianRepository, TechnicianRepository>();
+builder.Services.AddScoped<ITechnicianService, TechnicianService>();
 
 // Las imágenes se guardan en disco y su referencia queda en la base de datos.
 var imagesRelativePath = builder.Configuration["Storage:VehicleImagesPath"] ?? "wwwroot/uploads/vehicles";
