@@ -22,6 +22,80 @@ namespace FlotaVehicular.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.MaintenanceOrder", b =>
+                {
+                    b.Property<int>("IdMaintenanceOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdMaintenanceOrder"));
+
+                    b.Property<DateTime?>("ClosedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(SYSUTCDATETIME())");
+
+                    b.Property<int?>("IdRequiredSpecialty")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdVehicle")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MaintenanceType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("OrderCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("RequestDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(SYSUTCDATETIME())");
+
+                    b.Property<DateTime?>("ScheduledDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("TotalCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18, 2)")
+                        .HasDefaultValue(0m);
+
+                    b.HasKey("IdMaintenanceOrder");
+
+                    b.HasIndex("IdRequiredSpecialty");
+
+                    b.HasIndex("IdVehicle");
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("MaintenanceOrder", (string)null);
+                });
+
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.SparePart", b =>
                 {
                     b.Property<int>("IdSparePart")
@@ -90,6 +164,31 @@ namespace FlotaVehicular.Infrastructure.Migrations
                     b.ToTable("SparePartSupplier", (string)null);
                 });
 
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.Specialty", b =>
+                {
+                    b.Property<int>("IdSpecialty")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdSpecialty"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("IdSpecialty");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Specialty", (string)null);
+                });
+
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.Supplier", b =>
                 {
                     b.Property<int>("IdSupplier")
@@ -127,6 +226,82 @@ namespace FlotaVehicular.Infrastructure.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Supplier", (string)null);
+                });
+
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.Technician", b =>
+                {
+                    b.Property<int>("IdTechnician")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdTechnician"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(SYSUTCDATETIME())");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("HourlyRate")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("IdentificationNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("IdTechnician");
+
+                    b.HasIndex("IdentificationNumber")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsAvailable");
+
+                    b.ToTable("Technician", (string)null);
+                });
+
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.TechnicianSpecialty", b =>
+                {
+                    b.Property<int>("IdTechnician")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdSpecialty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CertificationLevel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("SinceDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("IdTechnician", "IdSpecialty");
+
+                    b.HasIndex("IdSpecialty");
+
+                    b.ToTable("TechnicianSpecialty", (string)null);
                 });
 
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.Vehicle", b =>
@@ -301,6 +476,24 @@ namespace FlotaVehicular.Infrastructure.Migrations
                     b.ToTable("VehicleImage", (string)null);
                 });
 
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.MaintenanceOrder", b =>
+                {
+                    b.HasOne("FlotaVehicular.Domain.Entities.Specialty", "RequiredSpecialty")
+                        .WithMany("MaintenanceOrders")
+                        .HasForeignKey("IdRequiredSpecialty")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FlotaVehicular.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("IdVehicle")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RequiredSpecialty");
+
+                    b.Navigation("Vehicle");
+                });
+
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.SparePartSupplier", b =>
                 {
                     b.HasOne("FlotaVehicular.Domain.Entities.SparePart", "SparePart")
@@ -318,6 +511,25 @@ namespace FlotaVehicular.Infrastructure.Migrations
                     b.Navigation("SparePart");
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.TechnicianSpecialty", b =>
+                {
+                    b.HasOne("FlotaVehicular.Domain.Entities.Specialty", "Specialty")
+                        .WithMany("TechnicianSpecialties")
+                        .HasForeignKey("IdSpecialty")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FlotaVehicular.Domain.Entities.Technician", "Technician")
+                        .WithMany("TechnicianSpecialties")
+                        .HasForeignKey("IdTechnician")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Specialty");
+
+                    b.Navigation("Technician");
                 });
 
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.Vehicle", b =>
@@ -347,9 +559,21 @@ namespace FlotaVehicular.Infrastructure.Migrations
                     b.Navigation("SparePartSuppliers");
                 });
 
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.Specialty", b =>
+                {
+                    b.Navigation("MaintenanceOrders");
+
+                    b.Navigation("TechnicianSpecialties");
+                });
+
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.Supplier", b =>
                 {
                     b.Navigation("SparePartSuppliers");
+                });
+
+            modelBuilder.Entity("FlotaVehicular.Domain.Entities.Technician", b =>
+                {
+                    b.Navigation("TechnicianSpecialties");
                 });
 
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.Vehicle", b =>
