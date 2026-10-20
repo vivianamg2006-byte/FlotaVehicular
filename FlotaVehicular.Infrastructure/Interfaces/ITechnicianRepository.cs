@@ -12,6 +12,7 @@ public interface ITechnicianRepository
     Task<Technician?> GetForUpdateAsync(int id);
     Task<bool> ExistsByIdentificationAsync(string identificationNumber, int? excludeId = null);
     Task<bool> ExistsByEmailAsync(string email, int? excludeId = null);
+    Task<IEnumerable<Technician>> GetAvailableBySpecialtyAsync(int idSpecialty);
     Task AddAsync(Technician technician);
     Task SaveChangesAsync();
 }

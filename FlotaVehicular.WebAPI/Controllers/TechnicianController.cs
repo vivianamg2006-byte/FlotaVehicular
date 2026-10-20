@@ -29,6 +29,13 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    [HttpGet("available")]
+    public async Task<IActionResult> GetAvailableBySpecialtyAsync([FromQuery] int idSpecialty)
+    {
+        var result = await _service.GetAvailableBySpecialtyAsync(idSpecialty);
+        return StatusCode(result.Status, result);
+    }
+
     [HttpGet("{id:int}", Name = "GetTechnicianById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {

@@ -158,6 +158,16 @@ public class TechnicianService : ITechnicianService
         return Result<TechnicianDetailDto>.Success(data, 200, "OK", "Técnico activado.");
     }
 
+    // Técnicos activos, disponibles y certificados en la especialidad indicada.
+    public async Task<Result<IEnumerable<TechnicianListDto>>> GetAvailableBySpecialtyAsync(int idSpecialty)
+    {
+        var specialists = await _repository.GetAvailableBySpecialtyAsync(idSpecialty);
+
+        var data = _mapper.Map<IEnumerable<TechnicianListDto>>(specialists);
+
+        return Result<IEnumerable<TechnicianListDto>>.Success(data);
+    }
+
     private static string? ValidatePaging(int pageNumber, int pageSize)
     {
         if (pageNumber < 1 || pageSize < 1 || pageSize > MaxPageSize)

@@ -12,4 +12,5 @@ public interface ITechnicianService
     Task<Result<TechnicianDetailDto>> UpdateAsync(int id, TechnicianUpdateDto technician);
     Task<Result<TechnicianDetailDto>> DeactivateAsync(int id);
     Task<Result<TechnicianDetailDto>> ActivateAsync(int id);
+    Task<Result<IEnumerable<TechnicianListDto>>> GetAvailableBySpecialtyAsync(int idSpecialty);
 }

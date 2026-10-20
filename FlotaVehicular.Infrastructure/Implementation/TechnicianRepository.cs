@@ -74,6 +74,17 @@ public class TechnicianRepository : ITechnicianRepository
             .AnyAsync(t => t.Email == email
                 && (excludeId == null || t.IdTechnician != excludeId));
 
+    // Técnicos activos, disponibles y certificados en la especialidad indicada.
+    public async Task<IEnumerable<Technician>> GetAvailableBySpecialtyAsync(int idSpecialty)
+        => await _context.Technician
+            .AsNoTracking()
+            .Where(t => t.IsActive && t.IsAvailable)
+            .Where(t => t.TechnicianSpecialties.Any(ts => ts.IdSpecialty == idSpecialty))
+            .Include(t => t.TechnicianSpecialties)
+                .ThenInclude(ts => ts.Specialty)
+            .OrderBy(t => t.FullName)
+            .ToListAsync();
+
     public async Task AddAsync(Technician technician)
     {
         _context.Technician.Add(technician);
