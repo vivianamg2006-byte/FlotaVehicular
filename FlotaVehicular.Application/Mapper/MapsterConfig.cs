@@ -244,5 +244,40 @@ public static class MapsterConfig
             .Ignore(dest => dest.CreatedAt)
             .Ignore(dest => dest.IsActive)
             .Ignore(dest => dest.TechnicianSpecialties);
+
+        // Órdenes de mantenimiento
+        TypeAdapterConfig<MaintenanceOrder, MaintenanceOrderListDto>
+            .NewConfig()
+            .Map(dest => dest.VehicleCode, src => src.Vehicle.Code)
+            .Map(dest => dest.VehicleLicensePlate, src => src.Vehicle.LicensePlate)
+            .Map(dest => dest.MaintenanceType, src => src.MaintenanceType.ToString())
+            .Map(dest => dest.Priority, src => src.Priority.ToString())
+            .Map(dest => dest.Status, src => src.Status.ToString())
+            .Map(dest => dest.RequiredSpecialtyName,
+                src => src.RequiredSpecialty != null ? src.RequiredSpecialty.Name : null);
+
+        TypeAdapterConfig<MaintenanceOrder, MaintenanceOrderDetailDto>
+            .NewConfig()
+            .Map(dest => dest.VehicleCode, src => src.Vehicle.Code)
+            .Map(dest => dest.VehicleLicensePlate, src => src.Vehicle.LicensePlate)
+            .Map(dest => dest.VehicleName, src => src.Vehicle.Name)
+            .Map(dest => dest.VehicleStatus, src => src.Vehicle.Status.ToString())
+            .Map(dest => dest.MaintenanceType, src => src.MaintenanceType.ToString())
+            .Map(dest => dest.Priority, src => src.Priority.ToString())
+            .Map(dest => dest.Status, src => src.Status.ToString())
+            .Map(dest => dest.RequiredSpecialtyName,
+                src => src.RequiredSpecialty != null ? src.RequiredSpecialty.Name : null);
+
+        TypeAdapterConfig<MaintenanceOrderCreateDto, MaintenanceOrder>
+            .NewConfig()
+            .Ignore(dest => dest.IdMaintenanceOrder)
+            .Ignore(dest => dest.OrderCode)
+            .Ignore(dest => dest.RequestDate)
+            .Ignore(dest => dest.ClosedDate)
+            .Ignore(dest => dest.TotalCost)
+            .Ignore(dest => dest.Status)
+            .Ignore(dest => dest.CreatedAt)
+            .Ignore(dest => dest.Vehicle)
+            .Ignore(dest => dest.RequiredSpecialty);
     }
 }
