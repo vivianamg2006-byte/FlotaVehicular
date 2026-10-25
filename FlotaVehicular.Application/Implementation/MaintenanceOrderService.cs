@@ -78,6 +78,14 @@ public class MaintenanceOrderService : IMaintenanceOrderService
             return Result<MaintenanceOrderDetailDto>.Failure(404, "Not Found",
                 $"La especialidad {order.IdRequiredSpecialty.Value} no existe.");
 
+        if (order.ScheduledDate.HasValue)
+        {
+            var today = DateTime.UtcNow.Date;
+            if (order.ScheduledDate.Value.Date < today)
+                return Result<MaintenanceOrderDetailDto>.Failure(400, "Bad Request",
+                    "La fecha programada no puede ser anterior a hoy.");
+        }
+
         var now = DateTime.UtcNow;
 
         var entity = _mapper.Map<MaintenanceOrder>(order);
