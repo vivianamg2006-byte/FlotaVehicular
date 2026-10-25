@@ -7,6 +7,7 @@ using FlotaVehicular.Infrastructure.Data;
 using FlotaVehicular.Infrastructure.Data.Seed;
 using FlotaVehicular.Infrastructure.Implementation;
 using FlotaVehicular.Infrastructure.Interfaces;
+using FlotaVehicular.WebAPI.Handlers;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +16,16 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 // Los errores de validación usan el mismo formato que las demás respuestas.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false));
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     })
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -97,6 +102,29 @@ builder.Services.AddSingleton<IImageStorage>(_ =>
     new LocalImageStorage(builder.Environment.ContentRootPath, imagesRelativePath, publicPrefix));
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var httpContext = statusCodeContext.HttpContext;
+    var statusCode = httpContext.Response.StatusCode;
+    string title = statusCode switch
+    {
+        404 => "Not Found",
+        405 => "Method Not Allowed",
+        _ => "Error"
+    };
+    string detail = statusCode switch
+    {
+        404 => "Recurso no encontrado.",
+        405 => "Método no permitido.",
+        _ => "Solicitud no válida."
+    };
+
+    var result = FlotaVehicular.Domain.DTO.PatternResult.Result<object>.Failure(statusCode, title, detail);
+    httpContext.Response.ContentType = "application/json; charset=utf-8";
+    await httpContext.Response.WriteAsJsonAsync(result);
+});
 
 // Scalar queda disponible al ejecutar en desarrollo.
 if (app.Environment.IsDevelopment())
