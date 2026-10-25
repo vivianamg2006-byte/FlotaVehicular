@@ -271,6 +271,9 @@ namespace FlotaVehicular.Infrastructure.Migrations
 
                     b.HasKey("IdTechnician");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("IdentificationNumber")
                         .IsUnique();
 
