@@ -1,624 +1,392 @@
-# FlotaVehicular — API de gestión de flota y mantenimiento de vehículos
+# Flota Vehicular
 
-Proyecto universitario independiente (primera entrega). API REST para el mantenimiento
-preventivo/correctivo de una flota vehicular: categorías, vehículos, imágenes, repuestos,
-proveedores y la relación repuesto–proveedor.
+API REST para la gestión de una flota vehicular y sus solicitudes de mantenimiento. Permite administrar vehículos, categorías, imágenes, técnicos, especialidades, repuestos y proveedores, junto con las relaciones entre estos registros.
 
-Arquitectura por capas basada en el mismo patrón del proyecto base (ERP9):
-repositorios, servicios, DTOs, Mapster y envoltorio `Result<T>` — sin modificar el proyecto base.
+El contexto del sistema es el mantenimiento de vehículos. Cada unidad tiene su categoría, kilometraje actual y kilometraje del último mantenimiento preventivo. Las categorías definen el intervalo de mantenimiento en kilómetros.
 
-## Stack
+## Tecnologías
 
-| Componente | Versión |
+| Componente | Tecnología |
 |---|---|
-| .NET | 10 (net10.0) |
-| ASP.NET Core Web API | 10 |
-| Entity Framework Core | 10.0.13 |
-| SQL Server | Local (`localhost`) |
-| Mapster | mapeo Entity ↔ DTO |
-| Scalar | documentación OpenAPI en desarrollo |
+| Plataforma | .NET 10 (`net10.0`) |
+| API | ASP.NET Core Web API |
+| Persistencia | Entity Framework Core 10.0.13 y SQL Server |
+| Mapeo entre entidades y DTO | Mapster 10.0.13 |
+| Documentación de la API | OpenAPI y Scalar |
+| Validación de imágenes | SkiaSharp |
 
-## Estructura de la solución
+## Organización del proyecto
 
-```
+La solución está dividida en cuatro proyectos:
+
+```text
 FlotaVehicular.slnx
-├── FlotaVehicular.Domain          Entidades, DTOs y Result<T>
-├── FlotaVehicular.Infrastructure  AppDbContext, configuraciones EF, repositorios, seeder, almacenamiento de imágenes
-├── FlotaVehicular.Application     Interfaces de servicios, implementaciones y mapeos Mapster
-└── FlotaVehicular.WebAPI          Program.cs, controladores, appsettings, wwwroot/uploads/vehicles
+├── FlotaVehicular.Domain
+│   ├── Entities
+│   ├── DTO
+│   ├── Exceptions
+│   └── Validations
+├── FlotaVehicular.Infrastructure
+│   ├── Data
+│   │   ├── Configurations
+│   │   └── Seed
+│   ├── Interfaces
+│   ├── Implementation
+│   └── Migrations
+├── FlotaVehicular.Application
+│   ├── Interfaces
+│   ├── Implementation
+│   └── Mapper
+└── FlotaVehicular.WebAPI
+    ├── Controllers
+    ├── Handlers
+    ├── Properties
+    ├── Program.cs
+    └── appsettings.json
 ```
 
-Cada módulo (categoría, vehículo, imagen, repuesto, proveedor, asociación) tiene:
-entidad → configuración EF → interfaz/repositorio → interfaz/servicio → DTOs → mapeos → controlador.
+- **Domain:** contiene las entidades, enumeraciones, DTO, excepciones y validaciones compartidas.
+- **Infrastructure:** contiene el contexto de EF Core, las configuraciones de las entidades, las migraciones, los repositorios, el seeder y el almacenamiento local de imágenes.
+- **Application:** contiene los servicios que aplican las reglas de negocio y los mapeos de Mapster.
+- **WebAPI:** recibe las solicitudes HTTP, registra las dependencias y configura las respuestas y el manejo global de excepciones.
 
-La carpeta `verificacion/` contiene los scripts reproducibles de pruebas (ver
-[Cómo reproducir la verificación](#cómo-reproducir-la-verificación)).
+Los controladores utilizan interfaces de servicios. Los servicios trabajan con interfaces de repositorios y estos realizan las consultas y operaciones de persistencia mediante `AppDbContext`. Las respuestas se construyen con DTO y `Result<T>`.
 
 ## Requisitos
 
-- .NET SDK 10
-- SQL Server local (Express/Developer). Se usa autenticación de Windows.
+- .NET SDK 10.
+- SQL Server en ejecución y una cuenta con permisos para crear o actualizar la base de datos.
+- Herramienta `dotnet-ef` de la versión 10 para aplicar las migraciones.
 
-## Configuración de la base de datos
+Si no está instalada la herramienta de Entity Framework:
 
-La cadena de conexión vive en `FlotaVehicular.WebAPI/appsettings.json` (sin credenciales — autenticación de Windows):
-
+```powershell
+dotnet tool install --global dotnet-ef --version 10.0.13
 ```
+
+## Configuración y ejecución
+
+### Conexión a SQL Server
+
+La conexión se configura en `FlotaVehicular.WebAPI/appsettings.json`, con la clave `ConnectionStrings:FlotaVehicular`:
+
+```text
 Server=localhost;Database=FlotaVehicular;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False
 ```
 
-Se puede sobrescribir sin tocar el código:
+Esta configuración usa autenticación de Windows. Si SQL Server está en otra instancia, se debe ajustar `Server` antes de aplicar las migraciones.
 
-- **Variable de entorno** (recomendado para pruebas):
-  ```powershell
-  $env:ConnectionStrings__FlotaVehicular = 'Server=localhost;Database=FlotaVehicular_RevVerify;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
-  ```
-- **user-secrets** (recomendado si en el futuro hay credenciales de SQL):
-  ```powershell
-  cd FlotaVehicular.WebAPI
-  dotnet user-secrets set "ConnectionStrings:FlotaVehicular" "Server=localhost;Database=FlotaVehicular;User Id=...;Password=...;TrustServerCertificate=True"
-  ```
 
-> `TrustServerCertificate=True` es necesario en el equipo porque el certificado autofirmado
-> de SQL Server local no está en el almacén de confianza.
 
-El almacén de imágenes se configura con `Storage:VehicleImagesPath` (por defecto
-`wwwroot/uploads/vehicles`). Las pruebas usan una ruta temporal aparte.
+### Preparar la base de datos
 
-## Migración — estado real
+Desde la carpeta que contiene `FlotaVehicular.slnx`:
 
-**La migración inicial existe y está aplicada.** Este es el estado verificado:
+```powershell
+dotnet restore FlotaVehicular.slnx
+dotnet build FlotaVehicular.slnx
+dotnet ef database update --project FlotaVehicular.Infrastructure --startup-project FlotaVehicular.WebAPI
+```
 
-| Verificación | Resultado |
+El esquema se define con las entidades y sus configuraciones de EF Core, y se actualiza en SQL Server mediante migraciones. El proyecto incluye:
+
+| Migración | Contenido |
 |---|---|
-| Migraciones en el proyecto | Una sola: `FlotaVehicular.Infrastructure\Migrations\20261019020509_InitialCreate.cs` |
-| Aplicada en la BD `FlotaVehicular` | Sí — `__EFMigrationsHistory` → `20261019020509_InitialCreate \| 10.0.13` |
-| Deriva modelo ↔ migraciones | Ninguna — `dotnet ef migrations has-pending-model-changes` → *"No changes have been made to the model since the last migration."* |
-| Datos de ejemplo | La semilla crea 10 vehículos, 10 categorías, 10 repuestos, 10 proveedores y 23 asociaciones. Las pruebas manuales pueden añadir registros. |
+| `InitialCreate` | Categorías, vehículos, imágenes, repuestos, proveedores y asociaciones repuesto-proveedor. |
+| `AddTechniciansSpecialtiesOrders` | Técnicos, especialidades, asociaciones técnico-especialidad y órdenes de mantenimiento. |
+| `AddTechnicianEmailUniqueIndex` | Índice único para el correo de los técnicos. |
 
-### Ajustes de esquema para el otro integrante
+Al aplicar las migraciones también se ejecuta `FleetSeeder`, registrado mediante `UseSeeding` y `UseAsyncSeeding`. La API no aplica migraciones al iniciar.
 
-**No hay ningún ajuste pendiente.** Tras la creación de `InitialCreate` no se modificó el
-esquema (la corrección de entidades `record class` → `class` descrita más abajo no altera
-tablas, columnas ni índices: por eso `has-pending-model-changes` no reporta nada). Para
-integrar la parte de técnicos/órdenes basta con:
+### Iniciar la API
+
+Desde la misma carpeta de la solución:
 
 ```powershell
-# Aplicar el esquema existente a la BD del compañero (idempotente)
-dotnet ef database update --startup-project FlotaVehicular.WebAPI
+dotnet run --project FlotaVehicular.WebAPI --launch-profile http
 ```
 
-y luego generar **nuevas migraciones encima** de `InitialCreate` para las tablas de los
-módulos futuros:
+El perfil `http` utiliza el entorno `Development` y la dirección `http://localhost:5137`.
 
-```powershell
-# NO recrear ni modificar 20261019020509_InitialCreate
-dotnet ef migrations add <NombreDelModulo> --project FlotaVehicular.Infrastructure --startup-project FlotaVehicular.WebAPI
-dotnet ef database update --startup-project FlotaVehicular.WebAPI
-```
+- [Documentación interactiva en Scalar](http://localhost:5137/scalar)
+- [Especificación OpenAPI](http://localhost:5137/openapi/v1.json)
 
-Notas de integración:
+Scalar permite consultar los contratos de entrada y salida y realizar solicitudes a los endpoints. La documentación se habilita al ejecutar en desarrollo.
 
-- El `AppDbContext` ya está configurado con `UseSeeding` / `UseAsyncSeeding`
-  (`FleetSeeder`): la semilla corre automáticamente al aplicar la migración y es
-  **idempotente** (verificado: dos `database update` seguidos sobre una BD nueva →
-  siempre 10/10/10/10/23 registros).
-- Las configuraciones EF de los 6 módulos de esta entrega ya están en `AppDbContext`
-  (`VehicleCategory`, `Vehicle`, `VehicleImage`, `SparePart`, `Supplier`, `SparePartSupplier`
-  con índices únicos, `decimal(18,2)` para dinero, identidades SQL Server y `CHECK` de stock).
-- El arranque de la API **no** ejecuta migraciones ni `EnsureCreated` (patrón acordado).
+## Datos iniciales
 
-## Ejecutar
+`FleetSeeder` carga datos del contexto vehicular. Antes de insertar, busca los registros por sus nombres, códigos, identificación, correo o claves de asociación para evitar duplicarlos al ejecutar nuevamente la semilla.
 
-```powershell
-cd C:\Web\FlotaVehicular
-dotnet build FlotaVehicular.slnx        # 0 errores / 0 advertencias
-cd FlotaVehicular.WebAPI
-dotnet run                              # http://localhost:5137
-```
-
-En desarrollo quedan disponibles:
-
-- OpenAPI: `GET http://localhost:5137/openapi/v1.json`
-- Scalar (UI): `http://localhost:5137/scalar`
-
-## Semilla de datos (FleetSeeder)
-
-Se ejecuta con la migración (ver arriba). Es **idempotente** y crea:
+En una base nueva se crean:
 
 | Tabla | Registros |
-|---|---|
-| Categorías | 10 (Camión de carga, Camioneta, Automóvil de pasajeros, …) |
-| Vehículos | 10 (5 Operativo, 2 EnMantenimiento, 1 FueraDeServicio, 2 DadoDeBaja) |
-| Repuestos | 10 (REP-001 … REP-010; REP-009 queda por debajo del stock mínimo) |
-| Proveedores | 10 (todos activos) |
-| Asociaciones repuesto–proveedor | 23; los 10 repuestos tienen 2 o 3 proveedores |
+|---|---:|
+| Categorías de vehículos | 10 |
+| Vehículos | 10 |
+| Técnicos | 10 |
+| Especialidades | 10 |
+| Repuestos | 10 |
+| Proveedores | 10 |
+| Órdenes de mantenimiento | 10 |
+| Asociaciones repuesto-proveedor | 23 |
+| Asociaciones técnico-especialidad | 20 |
 
-## Convención de respuestas
+Los vehículos incluyen ejemplos de los cuatro estados: cinco operativos, dos en mantenimiento, uno fuera de servicio y dos dados de baja. Los técnicos incluyen registros disponibles, no disponibles e inactivos. El repuesto `REP-009` tiene stock inferior al mínimo.
 
-Todas las respuestas (incluidos errores de validación automáticos de `[ApiController]`)
-usan el mismo envoltorio:
+Las órdenes iniciales incluyen distintos estados como datos de ejemplo. Las solicitudes creadas desde la API nacen en estado `Solicitada` y con costo total en cero.
+
+Las imágenes se agregan mediante sus endpoints y se almacenan en disco; el seeder no carga archivos de imagen.
+
+## Modelo de datos y relaciones
+
+| Relación | Cardinalidad | Implementación |
+|---|---|---|
+| Categoría y vehículos | 1:N | Cada vehículo pertenece a una categoría. |
+| Vehículo e imágenes | 1:N | Un vehículo puede tener varias imágenes y una principal. |
+| Vehículo y órdenes | 1:N | Cada orden corresponde a un único vehículo. |
+| Especialidad y órdenes | 1:N | Una orden puede indicar una especialidad requerida. |
+| Técnicos y especialidades | N:N | `TechnicianSpecialty`, con nivel de certificación y fecha desde la que posee la especialidad. |
+| Repuestos y proveedores | N:N | `SparePartSupplier`, con precio ofrecido, días estimados de entrega y fecha de asociación. |
+
+Las tablas puente utilizan claves primarias compuestas para impedir asociaciones duplicadas. SQL Server también aplica los índices únicos y las restricciones de integridad configuradas en EF Core. Los importes monetarios se almacenan como `decimal(18,2)`.
+
+## Módulos y reglas de negocio
+
+### Vehículos y categorías
+
+El vehículo registra código, placa, nombre, descripción, fecha de adquisición, valor de referencia, categoría e imagen. Los datos propios del contexto son marca, modelo, año, kilometraje actual y kilometraje del último mantenimiento preventivo.
+
+- El código y la placa son únicos; se guardan sin espacios al inicio o al final y en mayúsculas. La semilla utiliza códigos como `VEH-0001` para identificar cada unidad independientemente de su placa.
+- La categoría debe existir y su nombre es único.
+- No se permite eliminar una categoría con vehículos asociados, incluidos los dados de baja.
+- La fecha de adquisición no puede ser futura y el kilometraje del último mantenimiento preventivo no puede superar el actual.
+- Los vehículos nuevos se registran como `Operativo`.
+- Los estados disponibles son `Operativo`, `EnMantenimiento`, `FueraDeServicio` y `DadoDeBaja`.
+- La baja es lógica: conserva el registro y sus relaciones, y guarda la fecha de baja. Un vehículo dado de baja no admite edición ni cambio de estado.
+- El listado excluye los vehículos dados de baja, salvo que se utilice `includeDeactivated=true`. La consulta por ID permite recuperar su información.
+
+La categoría guarda el intervalo preventivo en `preventiveMaintenanceIntervalKm`. Las consultas de vehículos devuelven `kmToNextPreventiveMaintenance`, calculado así:
+
+```text
+Intervalo de la categoría - (kilometraje actual - kilometraje del último preventivo)
+```
+
+Un resultado igual a cero indica que se alcanzó el intervalo y uno negativo indica que se superó.
+
+### Imágenes de vehículos
+
+Las imágenes se cargan como `multipart/form-data`, con el campo `file` y, en la carga, el campo opcional `isMain`. La primera imagen queda como principal. Al agregar otra con `isMain=true`, se actualiza la referencia principal del vehículo.
+
+Se aceptan JPEG, PNG, GIF y WebP, con un tamaño máximo de 5 MB y hasta 20 millones de píxeles. Se comprueba que el contenido se pueda decodificar y corresponda con la extensión y el tipo de contenido declarado.
+
+Los archivos se guardan en `FlotaVehicular.WebAPI/wwwroot/uploads/vehicles`, con sus referencias en SQL Server. La ubicación se configura con `Storage:VehicleImagesPath`.
+
+Al reemplazar una imagen se conserva su ID. El archivo anterior se elimina después de guardar el reemplazo en la base de datos. Al eliminar la principal, se selecciona otra imagen del vehículo si existe.
+
+### Técnicos y especialidades
+
+Los técnicos registran nombre completo, identificación, correo, teléfono, disponibilidad, tarifa por hora y condición activa. La identificación y el correo son únicos, el correo debe tener un formato válido y la tarifa debe ser mayor que cero.
+
+Cada especialidad tiene nombre y descripción. Un técnico puede tener varias especialidades y cada asociación guarda `certificationLevel` y `sinceDate`.
+
+- No se puede registrar dos veces la misma pareja técnico-especialidad.
+- Para crear una asociación, ambos registros deben existir y el técnico debe estar activo.
+- Se puede actualizar la certificación o desasociar una especialidad.
+- La consulta de disponibles por especialidad devuelve técnicos activos, disponibles y asociados a esa especialidad.
+- Los técnicos se desactivan sin eliminar sus asociaciones y se pueden reactivar. `includeInactive=true` permite incluirlos en el listado.
+- Las especialidades tienen nombre único. Su eliminación está restringida si tienen técnicos asociados o están referenciadas por órdenes.
+
+### Repuestos y proveedores
+
+Cada repuesto registra código, nombre, unidad de medida, stock actual y stock mínimo. El código es único y se guarda en mayúsculas. El stock actual y el mínimo no pueden ser negativos; estas restricciones también se aplican en SQL Server.
+
+Los proveedores registran nombre, contacto, dirección, condiciones generales y condición activa. Su nombre es único. Se pueden desactivar y reactivar conservando las asociaciones existentes.
+
+La relación repuesto-proveedor guarda `offeredPrice` y `estimatedDeliveryDays`. Permite consultar y actualizar las condiciones ofrecidas por cada proveedor.
+
+- No se puede repetir la misma pareja repuesto-proveedor.
+- Ambos registros deben existir y el proveedor debe estar activo para crear una asociación.
+- No se permite eliminar físicamente un repuesto o proveedor mientras tenga asociaciones en la tabla puente.
+- El detalle de cada repuesto incluye sus proveedores y el de cada proveedor incluye sus repuestos, con las condiciones de cada asociación.
+- La consulta de stock bajo devuelve los repuestos cuyo `currentStock` es menor que `minStock`.
+
+### Solicitudes de mantenimiento
+
+Permite crear solicitudes y consultar su listado o detalle. La orden almacena código, vehículo, tipo de mantenimiento, especialidad requerida opcional, motivo, fechas de solicitud, programación y cierre, prioridad, costo total y estado.
+
+- Los tipos de mantenimiento son `Preventivo`, `Correctivo` y `Emergencia`.
+- Las prioridades son `Baja`, `Media`, `Alta` y `Critica`.
+- La API genera el código con el formato `OM-yyyyMMdd-0001`, asigna la fecha de solicitud en UTC y registra el estado inicial `Solicitada` y el costo total en cero.
+- El vehículo debe existir y no puede estar dado de baja ni fuera de servicio.
+- Si el vehículo está en mantenimiento, solo se admite una solicitud de tipo `Emergencia`.
+- La especialidad requerida debe existir cuando se envía.
+- La fecha programada no puede ser anterior al día actual en UTC.
+
+## Endpoints
+
+Las rutas parten de `http://localhost:5137`. Los cuerpos de creación y edición se envían como JSON, excepto los archivos de imagen. Los campos de los contratos se pueden consultar en Scalar.
+
+### Categorías
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/vehiclecategory` | Listar y buscar por nombre o descripción con `search`. |
+| GET | `/api/vehiclecategory/paged` | Consultar con paginación y búsqueda. |
+| GET | `/api/vehiclecategory/{id}` | Consultar detalle y vehículos asociados. |
+| POST | `/api/vehiclecategory` | Registrar categoría. |
+| PUT | `/api/vehiclecategory/{id}` | Actualizar categoría. |
+| DELETE | `/api/vehiclecategory/{id}` | Eliminar una categoría sin vehículos. |
+
+### Vehículos
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/vehicle` | Listar y filtrar vehículos. |
+| GET | `/api/vehicle/paged` | Consultar con paginación y filtros. |
+| GET | `/api/vehicle/{id}` | Consultar detalle, categoría e imágenes. |
+| POST | `/api/vehicle` | Registrar vehículo. |
+| PUT | `/api/vehicle/{id}` | Actualizar vehículo. |
+| PUT | `/api/vehicle/{id}/status` | Cambiar a `Operativo`, `EnMantenimiento` o `FueraDeServicio`. |
+| DELETE | `/api/vehicle/{id}` | Dar de baja lógicamente. |
+
+Filtros: `search` por código, placa, nombre, marca o modelo; `idVehicleCategory`, `status` e `includeDeactivated`.
+
+### Imágenes
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/vehicle/{vehicleId}/images` | Consultar las imágenes del vehículo. |
+| POST | `/api/vehicle/{vehicleId}/images` | Cargar archivo con `file` e `isMain` opcional. |
+| GET | `/api/vehicle/{vehicleId}/images/{imageId}/file` | Descargar el archivo. |
+| PUT | `/api/vehicle/{vehicleId}/images/{imageId}` | Reemplazar el archivo con `file`. |
+| DELETE | `/api/vehicle/{vehicleId}/images/{imageId}` | Eliminar imagen y archivo. |
+
+### Técnicos
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/technician` | Listar y buscar por nombre, identificación o correo. |
+| GET | `/api/technician/paged` | Consultar con paginación y búsqueda. |
+| GET | `/api/technician/{id}` | Consultar detalle y especialidades. |
+| GET | `/api/technician/available?idSpecialty={id}` | Consultar disponibles por especialidad. |
+| POST | `/api/technician` | Registrar técnico. |
+| PUT | `/api/technician/{id}` | Actualizar técnico. |
+| PUT | `/api/technician/{id}/deactivate` | Desactivar técnico. |
+| PUT | `/api/technician/{id}/activate` | Reactivar técnico. |
+
+Filtros del listado: `search` e `includeInactive`.
+
+### Especialidades
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/specialty` | Listar y buscar por nombre con `search`. |
+| GET | `/api/specialty/paged` | Consultar con paginación y búsqueda. |
+| GET | `/api/specialty/{id}` | Consultar detalle y técnicos asociados. |
+| POST | `/api/specialty` | Registrar especialidad. |
+| PUT | `/api/specialty/{id}` | Actualizar especialidad. |
+| DELETE | `/api/specialty/{id}` | Eliminar una especialidad sin referencias. |
+
+### Técnico-especialidad
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/technicianspecialty` | Listar asociaciones. |
+| GET | `/api/technicianspecialty/paged` | Consultar con paginación y filtros. |
+| GET | `/api/technicianspecialty/{idTechnician}/{idSpecialty}` | Consultar una asociación. |
+| POST | `/api/technicianspecialty` | Asociar una especialidad con certificación y fecha. |
+| PUT | `/api/technicianspecialty/{idTechnician}/{idSpecialty}` | Actualizar certificación y fecha. |
+| DELETE | `/api/technicianspecialty/{idTechnician}/{idSpecialty}` | Desasociar una especialidad. |
+
+Filtros: `idTechnician`, `idSpecialty` y `search`.
+
+### Repuestos
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/sparepart` | Listar y filtrar repuestos. |
+| GET | `/api/sparepart/paged` | Consultar con paginación y filtros. |
+| GET | `/api/sparepart/below-minimum-stock` | Consultar stock bajo con paginación. |
+| GET | `/api/sparepart/{id}` | Consultar detalle y proveedores asociados. |
+| POST | `/api/sparepart` | Registrar repuesto. |
+| PUT | `/api/sparepart/{id}` | Actualizar repuesto. |
+| DELETE | `/api/sparepart/{id}` | Eliminar un repuesto sin proveedores asociados. |
+
+Filtros: `search` por código o nombre y `belowMinimumOnly`.
+
+### Proveedores
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/supplier` | Listar y buscar por nombre o contacto. |
+| GET | `/api/supplier/paged` | Consultar con paginación y filtros. |
+| GET | `/api/supplier/{id}` | Consultar detalle y repuestos asociados. |
+| POST | `/api/supplier` | Registrar proveedor. |
+| PUT | `/api/supplier/{id}` | Actualizar proveedor. |
+| PUT | `/api/supplier/{id}/deactivate` | Desactivar proveedor. |
+| PUT | `/api/supplier/{id}/activate` | Reactivar proveedor. |
+| DELETE | `/api/supplier/{id}` | Eliminar un proveedor sin repuestos asociados. |
+
+Filtros: `search` e `includeInactive`.
+
+### Repuesto-proveedor
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/sparepartsupplier` | Listar asociaciones y sus condiciones. |
+| GET | `/api/sparepartsupplier/paged` | Consultar con paginación y filtros. |
+| GET | `/api/sparepartsupplier/{idSparePart}/{idSupplier}` | Consultar una asociación. |
+| POST | `/api/sparepartsupplier` | Asociar un proveedor con precio y días de entrega. |
+| PUT | `/api/sparepartsupplier/{idSparePart}/{idSupplier}` | Actualizar precio y días de entrega. |
+| DELETE | `/api/sparepartsupplier/{idSparePart}/{idSupplier}` | Eliminar la asociación. |
+
+Filtros: `idSparePart`, `idSupplier` y `search`.
+
+### Órdenes de mantenimiento
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/api/maintenanceorder` | Listar y filtrar solicitudes. |
+| GET | `/api/maintenanceorder/paged` | Consultar con paginación y filtros. |
+| GET | `/api/maintenanceorder/{id}` | Consultar el detalle de una solicitud. |
+| POST | `/api/maintenanceorder` | Crear una solicitud. |
+
+Filtros: `status`, `idVehicle`, `maintenanceType` y `priority`.
+
+## Respuestas y validaciones
+
+Las operaciones JSON utilizan el formato `Result<T>`:
 
 ```json
 {
   "isSuccess": true,
   "status": 200,
   "title": "OK",
-  "detail": "...",
-  "data": { }
+  "detail": "",
+  "data": {}
 }
 ```
 
-Códigos usados: `200` OK · `201` Created · `400` validación · `404` inexistente ·
-`409` conflicto de integridad (duplicados, borrados con referencias) ·
-`410` Gone (archivo de imagen borrado del disco) · `413` archivo mayor a 5 MB ·
-`500` error interno con compensación (solo en fallo de BD durante reemplazo de imagen).
+El contenido de `data` depende de la operación. Las descargas de imágenes devuelven el archivo con su tipo de contenido.
 
-Los enums (`VehicleStatus`) se envían/reciben **como texto y de forma estricta**:
-`"Operativo"`, `"EnMantenimiento"`, `"FueraDeServicio"`, `"DadoDeBaja"`.
-`JsonStringEnumConverter` está configurado con `allowIntegerValues: false`, de modo que
-`{"status":99}` o `{"status":"NoExiste"}` rechazan en el propio enlace JSON con `400`
-(en forma `Result<T>`), y el servicio además valida con `Enum.IsDefined` como
-defensa en profundidad.
+| Código HTTP | Uso |
+|---|---|
+| 200 | Consulta, actualización, baja o eliminación correcta. |
+| 201 | Registro o asociación creada. |
+| 400 | Datos inválidos o incumplimiento de una regla de negocio. |
+| 404 | Registro, asociación o recurso inexistente. |
+| 405 | Método HTTP no permitido para la ruta. |
+| 409 | Duplicados, referencias que impiden eliminar o conflictos de actualización. |
+| 410 | El registro de imagen existe, pero su archivo no está disponible. |
+| 413 | Archivo que supera el tamaño permitido. |
+| 500 | Error interno. |
 
-Las listas devuelven `200` con arreglo vacío cuando el filtro no coincide (nunca 404).
+Los DTO validan campos obligatorios, longitudes, rangos y formatos. Los errores de validación incluyen el detalle por campo dentro de `data`. Los valores de enumeraciones enviados en JSON se representan como texto; se rechazan los números y los nombres que no pertenecen a la enumeración.
 
-## Endpoints
+`GlobalExceptionHandler` centraliza las excepciones de la aplicación y de persistencia. Los conflictos de unicidad, integridad referencial y concurrencia se convierten en respuestas controladas. Los errores inesperados se registran en el log y devuelven un mensaje general con un identificador de seguimiento.
 
-### Categorías — `/api/vehiclecategory`
+### Paginación
 
-| Método | Ruta | Notas |
-|---|---|---|
-| GET | `/api/vehiclecategory?search=cam` | búsqueda por nombre |
-| GET | `/api/vehiclecategory/paged?pageNumber=1&pageSize=10` | paginación |
-| GET | `/api/vehiclecategory/{id}` | incluye `vehicleCount` |
-| POST | `/api/vehiclecategory` | 409 si el nombre ya existe |
-| PUT | `/api/vehiclecategory/{id}` | |
-| DELETE | `/api/vehiclecategory/{id}` | 409 si tiene vehículos (RESTRICT, incluso dados de baja) |
+Los endpoints terminados en `/paged` reciben `pageNumber` y `pageSize`, además de los filtros de su módulo. Ambos parámetros tienen valores predeterminados de `1` y `10`, respectivamente. `pageNumber` debe ser mayor o igual a 1 y `pageSize` debe estar entre 1 y 50.
 
-### Vehículos — `/api/vehicle`
-
-| Método | Ruta | Notas |
-|---|---|---|
-| GET | `/api/vehicle` | filtros: `search` (código, placa, nombre, marca, modelo), `status`, `idVehicleCategory`, `includeDeactivated` |
-| GET | `/api/vehicle/paged?pageNumber=1&pageSize=10` | mismos filtros + paginación |
-| GET | `/api/vehicle/{id}` | incluye categoría, imágenes e `imageCount`; calcula `kmToNextPreventiveMaintenance` |
-| POST | `/api/vehicle` | nace `Operativo`; 409 por código o placa duplicados; 400 por categoría inexistente, fecha futura o preventivo > km actual |
-| PUT | `/api/vehicle/{id}` | 409 si está dado de baja |
-| PUT | `/api/vehicle/{id}/status` | cuerpo `{"status":"EnMantenimiento"}`; valores fuera del enum → 400; `DadoDeBaja` → 400 (solo vía DELETE) |
-| DELETE | `/api/vehicle/{id}` | baja **lógica**: estado `DadoDeBaja` + fecha; conserva categoría e imágenes; idempotente |
-
-### Imágenes — `/api/vehicle/{vehicleId}/images`
-
-Subida/consulta/reemplazo/borrado de **archivos reales** en el almacén configurable
-(`Storage:VehicleImagesPath`; por defecto `wwwroot/uploads/vehicles`; protegido contra
-path traversal).
-
-| Método | Ruta | Notas |
-|---|---|---|
-| GET | `/api/vehicle/{id}/images` | lista (principal primero) |
-| POST | `/api/vehicle/{id}/images` | `multipart/form-data`: campo `file` + `isMain` opcional; 201 |
-| GET | `/api/vehicle/{id}/images/{imageId}/file` | descarga el binario original; 410 si el archivo ya no está en disco |
-| PUT | `/api/vehicle/{id}/images/{imageId}` | reemplaza el archivo físico y conserva el registro (mismo Id) |
-| DELETE | `/api/vehicle/{id}/images/{imageId}` | borra registro y archivo |
-
-Validación de contenido (aplica en **subida y reemplazo**), en este orden:
-
-1. Tamaño ≤ **5 MB** → si lo supera, `413`.
-2. **Firma binaria real** (magic bytes): PNG, JPEG, WEBP o GIF → si no coincide, `400`
-   *"firma de formato no reconocida"* (atrapa archivos de texto con extensión engañosa).
-3. La firma debe coincidir con la **extensión y el content-type declarados** → si no, `400`
-   (atrapa un JPEG declarado como `image/png`).
-4. **Marca de fin de archivo** (p. ej. IEND en PNG, FFD9 en JPEG) → si falta, `400`
-   *"está corrupto o incompleto"* (atrapa PNG truncados).
-
-La primera imagen subida queda como principal; el reemplazo mantiene la coherencia de la
-imagen principal y de `Vehicle.ImagePath`.
-
-### Repuestos — `/api/sparepart`
-
-| Método | Ruta | Notas |
-|---|---|---|
-| GET | `/api/sparepart?search=filtro&belowMinimumOnly=true` | filtros: `search` (código o nombre), `belowMinimumOnly` |
-| GET | `/api/sparepart/paged` | paginación |
-| GET | `/api/sparepart/below-minimum-stock` | repuestos con `currentStock < minStock` |
-| GET | `/api/sparepart/{id}` | incluye proveedores (`supplierCount` + colección con precio y días) |
-| POST | `/api/sparepart` | 409 por código duplicado; stock negativo → 400 (además, CHECK en BD) |
-| PUT | `/api/sparepart/{id}` | |
-| DELETE | `/api/sparepart/{id}` | 409 si tiene proveedores asociados |
-
-### Proveedores — `/api/supplier`
-
-| Método | Ruta | Notas |
-|---|---|---|
-| GET | `/api/supplier?search=norte&includeInactive=true` | solo activos; `includeInactive=true` incluye dados de baja; `search` por nombre |
-| GET | `/api/supplier/paged` | paginación |
-| GET | `/api/supplier/{id}` | incluye `sparePartCount` + colección |
-| POST | `/api/supplier` | 409 por nombre duplicado |
-| PUT | `/api/supplier/{id}` | |
-| PUT | `/api/supplier/{id}/deactivate` | baja lógica; conserva sus repuestos |
-| PUT | `/api/supplier/{id}/activate` | reactivación |
-| DELETE | `/api/supplier/{id}` | 409 si tiene repuestos asociados |
-
-### Repuesto – Proveedor — `/api/sparepartsupplier`
-
-| Método | Ruta | Notas |
-|---|---|---|
-| GET | `/api/sparepartsupplier?idSparePart=1` | filtros: `idSparePart`, `idSupplier`, `search`; trae datos del repuesto y del proveedor |
-| GET | `/api/sparepartsupplier/paged` | paginación global |
-| GET | `/api/sparepartsupplier/{idSparePart}/{idSupplier}` | 404 si la pareja no existe |
-| POST | `/api/sparepartsupplier` | 201; 409 si la pareja ya existe; 404 si el repuesto/proveedor no existe; 400 si el proveedor está desactivado |
-| PUT | `/api/sparepartsupplier/{idSparePart}/{idSupplier}` | actualiza `offeredPrice` y `estimatedDeliveryDays` |
-| DELETE | `/api/sparepartsupplier/{idSparePart}/{idSupplier}` | desasocia (no borra ni el repuesto ni el proveedor) |
-
-El precio se almacena como `decimal(18,2)` en la base de datos.
-
----
-
-## Solicitudes ejecutables
-
-Todos los ejemplos usan `curl.exe` (incluido en Windows) contra `http://localhost:5137`
-y están escritos para ejecutarse sobre una BD recién sembrada (los IDs creados en los
-ejemplos son 11 en adelante: la semilla ocupa 1–10). Se indican el **cuerpo completo** y
-el **resultado esperado** de cada solicitud; los estados listados fueron los obtenidos
-en la verificación del 18/10/2026 (ver [Evidencia](#evidencia-de-verificación)).
-
-### Categorías
-
-```bash
-# Crear → 201 con data.idVehicleCategory=11, vehicleCount=0
-curl -X POST http://localhost:5137/api/vehiclecategory -H "Content-Type: application/json" \
-  -d '{"name":"Categoria TEST-VERIFY","description":"creada por la bateria de verificacion","preventiveMaintenanceIntervalKm":10000}'
-
-# Mismo nombre otra vez → 409 {"isSuccess":false,...,"detail":"Ya existe una categoría con el nombre 'Categoria TEST-VERIFY'."}
-curl -X POST http://localhost:5137/api/vehiclecategory -H "Content-Type: application/json" \
-  -d '{"name":"Categoria TEST-VERIFY","description":"x","preventiveMaintenanceIntervalKm":10000}'
-
-# Editar → 200; GET después conserva description e intervalo (persistencia real)
-curl -X PUT http://localhost:5137/api/vehiclecategory/11 -H "Content-Type: application/json" \
-  -d '{"name":"Categoria TEST-VERIFY v2","description":"editada","preventiveMaintenanceIntervalKm":12000}'
-curl http://localhost:5137/api/vehiclecategory/11
-#   -> data.description="editada", data.preventiveMaintenanceIntervalKm=12000
-
-# Búsqueda y paginación
-curl "http://localhost:5137/api/vehiclecategory?search=TEST-VERIFY"     # 200, >= 1 resultados
-curl "http://localhost:5137/api/vehiclecategory/paged?pageNumber=1&pageSize=3"
-#   -> 200, data con 3 ítems, pageSize=3, totalPages >= 4 (10 categorías sembradas + 1 creada)
-
-# GET inexistente -> 404
-curl http://localhost:5137/api/vehiclecategory/9999
-
-# DELETE con vehículos (incluso dados de baja) -> 409 (RESTRICT)
-curl -X DELETE http://localhost:5137/api/vehiclecategory/1
-# DELETE sin vehículos (la creada en el paso anterior) -> 200
-curl -X DELETE http://localhost:5137/api/vehiclecategory/11
-```
-
-### Vehículos
-
-```bash
-# Crear -> 201, nace con status="Operativo"
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"VER-900","licensePlate":"VER-900-A","name":"Vehiculo de verificacion","acquisitionDate":"2024-01-15","referenceValue":15000,"idVehicleCategory":1,"brand":"TestBrand","model":"ModelX","year":2023,"currentMileage":1000,"lastPreventiveMaintenanceMileage":800}'
-
-# Código repetido (mismo cuerpo otra vez) -> 409 {"detail":"Ya existe un vehículo con el código 'VER-900'."}
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"VER-900","licensePlate":"VER-900-A","name":"Vehiculo de verificacion","acquisitionDate":"2024-01-15","referenceValue":15000,"idVehicleCategory":1,"brand":"TestBrand","model":"ModelX","year":2023,"currentMileage":1000,"lastPreventiveMaintenanceMileage":800}'
-
-# Código repetido con otra placa -> 409 {"detail":"Ya existe un vehículo con el código 'VER-900'."}
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"VER-900","licensePlate":"VER-901-A","name":"Vehiculo de verificacion","acquisitionDate":"2024-01-15","referenceValue":15000,"idVehicleCategory":1,"brand":"TestBrand","model":"ModelX","year":2023,"currentMileage":1000,"lastPreventiveMaintenanceMileage":800}'
-
-# Placa repetida con código nuevo -> 409 {"detail":"Ya existe un vehículo con la placa 'VER-900-A'."}
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"VER-901","licensePlate":"VER-900-A","name":"x","acquisitionDate":"2024-01-15","referenceValue":1000,"idVehicleCategory":1,"brand":"Marca","model":"Modelo","year":2023,"currentMileage":100,"lastPreventiveMaintenanceMileage":50}'
-
-# Categoría inexistente -> 400 {"detail":"La categoría 9999 no existe."}
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"VER-902","licensePlate":"VER-902-A","name":"Vehiculo de verificacion","acquisitionDate":"2024-01-15","referenceValue":15000,"idVehicleCategory":9999,"brand":"TestBrand","model":"ModelX","year":2023,"currentMileage":1000,"lastPreventiveMaintenanceMileage":800}'
-
-# Fecha de adquisición futura -> 400 {"detail":"La fecha de adquisición no puede ser futura."}
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"FUT-1","licensePlate":"FUT-1-A","name":"Fecha futura","acquisitionDate":"2099-12-31","referenceValue":1000,"idVehicleCategory":1,"brand":"Marca","model":"Modelo","year":2024,"currentMileage":0,"lastPreventiveMaintenanceMileage":0}'
-
-# Kilometraje preventivo > actual -> 400 {"detail":"El kilometraje del último mantenimiento preventivo no puede superar el kilometraje actual."}
-curl -X POST http://localhost:5137/api/vehicle -H "Content-Type: application/json" \
-  -d '{"code":"KM-1","licensePlate":"KM-1-A","name":"Km invalido","acquisitionDate":"2024-01-01","referenceValue":1000,"idVehicleCategory":1,"brand":"Marca","model":"Modelo","year":2024,"currentMileage":500,"lastPreventiveMaintenanceMileage":900}'
-
-# Editar -> 200 y los campos mapeados persisten (verificado con GET posterior)
-curl -X PUT http://localhost:5137/api/vehicle/11 -H "Content-Type: application/json" \
-  -d '{"code":"VER-900","licensePlate":"VER-900-A","name":"Vehiculo de verificacion EDITADO","acquisitionDate":"2024-01-15","referenceValue":15000,"idVehicleCategory":1,"brand":"MarcaEditada","model":"ModelX","year":2023,"currentMileage":2222,"lastPreventiveMaintenanceMileage":800}'
-curl http://localhost:5137/api/vehicle/11
-#   -> data.name="Vehiculo de verificacion EDITADO", data.brand="MarcaEditada", data.currentMileage=2222
-
-# Cambio de estado
-curl -X PUT http://localhost:5137/api/vehicle/11/status -H "Content-Type: application/json" \
-  -d '{"status":"FueraDeServicio"}'                              # -> 200
-curl -X PUT http://localhost:5137/api/vehicle/1/status -H "Content-Type: application/json" \
-  -d '{"status":99}'                                             # -> 400 (entero rechazado en el enlace JSON, forma Result<T>)
-curl -X PUT http://localhost:5137/api/vehicle/1/status -H "Content-Type: application/json" \
-  -d '{"status":"NoExiste"}'                                     # -> 400 (valor fuera del enum)
-curl -X PUT http://localhost:5137/api/vehicle/1/status -H "Content-Type: application/json" \
-  -d '{"status":"DadoDeBaja"}'                                   # -> 400 {"detail":"Para dar de baja un vehículo use DELETE /api/vehicle/{id} (baja lógica)."}
-curl -X PUT http://localhost:5137/api/vehicle/9999/status -H "Content-Type: application/json" \
-  -d '{"status":"Operativo"}'                                    # -> 404
-
-# Filtros y paginación
-curl "http://localhost:5137/api/vehicle?search=VER-900"                 # 200, encuentra el creado
-curl "http://localhost:5137/api/vehicle?status=EnMantenimiento"         # 200 (puede traer lista vacía)
-curl "http://localhost:5137/api/vehicle?idVehicleCategory=11"           # 200, solo vehículos de esa categoría
-curl "http://localhost:5137/api/vehicle/paged?pageNumber=1&pageSize=4"
-#   -> 200, 4 ítems; totalRecords == total de vehículos activos (excluye dados de baja)
-
-# Baja lógica -> 200; la repetición es idempotente -> 200
-curl -X DELETE http://localhost:5137/api/vehicle/11
-curl -X DELETE http://localhost:5137/api/vehicle/11
-curl http://localhost:5137/api/vehicle/11                          # -> 200, data.status="DadoDeBaja"
-curl "http://localhost:5137/api/vehicle?search=VER-900"              # -> 200, lista vacía (excluido)
-curl "http://localhost:5137/api/vehicle?search=VER-900&includeDeactivated=true"   # -> 200, lo muestra
-curl -X PUT http://localhost:5137/api/vehicle/11/status -H "Content-Type: application/json" \
-  -d '{"status":"Operativo"}'                                     # -> 409 (dato de baja no se reactiva por status)
-```
-
-### Imágenes
-
-```bash
-# Subida válida (PNG real) -> 201 con data.fileName, data.isMain=true (si es la primera)
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/real.png;type=image/png" -F "isMain=true"
-
-# JPEG y GIF reales -> 201
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/real.jpg;type=image/jpeg" -F "isMain=false"
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/real.gif;type=image/gif" -F "isMain=false"
-
-# Texto plano con nombre .png -> 400 "firma de formato no reconocida"
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/fake.png;type=image/png"
-
-# PNG truncado (sin marca IEND) -> 400 "corrupto o incompleto"
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/corrupt.png;type=image/png"
-
-# JPEG declarado como image/png -> 400 (el contenido real no coincide con lo declarado)
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/real.jpg;type=image/png"
-
-# Archivo de 6 MB -> 413 Payload Too Large
-curl -X POST http://localhost:5137/api/vehicle/2/images \
-  -F "file=@verificacion/archivos-prueba/big.png;type=image/png"
-
-# Vehículo inexistente -> 404
-curl -X POST http://localhost:5137/api/vehicle/9999/images \
-  -F "file=@verificacion/archivos-prueba/real.png;type=image/png"
-
-# Reemplazo válido -> 200, conserva el mismo idVehicleImage; el archivo viejo se borra
-# recién después de persistir en BD; la imagen principal sigue coherente con imagePath
-curl -X PUT http://localhost:5137/api/vehicle/2/images/{imageId} \
-  -F "file=@verificacion/archivos-prueba/real.jpg;type=image/jpeg"
-
-# Reemplazo con contenido falso -> 400 y el archivo actual queda intacto
-curl -X PUT http://localhost:5137/api/vehicle/2/images/{imageId} \
-  -F "file=@verificacion/archivos-prueba/fake.png;type=image/png"
-
-# Descarga del binario -> 200 image/png, bytes idénticos a los subidos
-curl -o salida.png http://localhost:5137/api/vehicle/2/images/{imageId}/file
-
-# Si el archivo se borró del disco -> 410 Gone
-# {"detail":"El archivo de la imagen ya no está disponible en el servidor."}
-
-# Borrar imagen -> 200 (registro y archivo)
-curl -X DELETE http://localhost:5137/api/vehicle/2/images/{imageId}
-```
-
-Los archivos `fake.png`, `corrupt.png` y `big.png` (y los válidos) se generan con
-`powershell -File verificacion/Nuevos-Archivos-Prueba.ps1` (no van en el repositorio:
-`big.png` pesa 6 MB).
-
-### Repuestos
-
-```bash
-# Crear -> 201
-curl -X POST http://localhost:5137/api/sparepart -H "Content-Type: application/json" \
-  -d '{"code":"VER-SP-1","name":"Repuesto verificacion","unitOfMeasure":"unidad","currentStock":5,"minStock":2}'
-
-# Código duplicado -> 409 (mismo cuerpo que el alta)
-curl -X POST http://localhost:5137/api/sparepart -H "Content-Type: application/json" \
-  -d '{"code":"VER-SP-1","name":"Repuesto verificacion","unitOfMeasure":"unidad","currentStock":5,"minStock":2}'
-
-# Stock negativo -> 400 con error por campo:
-# {"detail":"Uno o más datos no son válidos.","data":{"CurrentStock":["El stock actual no puede ser negativo."]}}
-curl -X POST http://localhost:5137/api/sparepart -H "Content-Type: application/json" \
-  -d '{"code":"NEG-1","name":"Stock negativo","unitOfMeasure":"unidad","currentStock":-1,"minStock":0}'
-
-# Editar -> 200; los campos mapeados persisten (verificado con GET posterior)
-curl -X PUT http://localhost:5137/api/sparepart/11 -H "Content-Type: application/json" \
-  -d '{"code":"VER-SP-1","name":"Repuesto verificacion EDITADO","unitOfMeasure":"litro","currentStock":7,"minStock":3}'
-
-# Repuesto bajo mínimo (se crea con stock 1 y mínimo 5) -> 201; aparece en ambas listas
-curl -X POST http://localhost:5137/api/sparepart -H "Content-Type: application/json" \
-  -d '{"code":"VER-SP-2","name":"Repuesto bajo minimo","unitOfMeasure":"unidad","currentStock":1,"minStock":5}'
-curl "http://localhost:5137/api/sparepart/below-minimum-stock"        # 200, incluye REP-009 y VER-SP-2
-curl "http://localhost:5137/api/sparepart?belowMinimumOnly=true"      # 200, mismo efecto de filtro
-
-# GET inexistente -> 404 {"detail":"El repuesto 9999 no existe."}
-curl http://localhost:5137/api/sparepart/9999
-
-# DELETE con proveedores asociados -> 409 (RESTRICT)
-curl -X DELETE http://localhost:5137/api/sparepart/1
-# (el mismo endpoint responde 200 sin asociaciones: se demuestra al final de la sección de asociaciones)
-```
-
-### Proveedores
-
-```bash
-# Crear -> 201
-curl -X POST http://localhost:5137/api/supplier -H "Content-Type: application/json" \
-  -d '{"name":"Proveedor VER-TEST","contact":"contacto@vertest.test","address":"Calle Test 123","generalConditions":"Neto 30 dias"}'
-
-# Nombre duplicado -> 409 (mismo cuerpo que el alta)
-curl -X POST http://localhost:5137/api/supplier -H "Content-Type: application/json" \
-  -d '{"name":"Proveedor VER-TEST","contact":"contacto@vertest.test","address":"Calle Test 123","generalConditions":"Neto 30 dias"}'
-
-# Editar -> 200; dirección y condiciones persisten (verificado con GET posterior)
-curl -X PUT http://localhost:5137/api/supplier/11 -H "Content-Type: application/json" \
-  -d '{"name":"Proveedor VER-TEST","contact":"editado@vertest.test","address":"Avenida Editada 45","generalConditions":"Contado 60 dias"}'
-
-# Desactivar -> 200 con status=false; el listado por defecto lo excluye
-curl -X PUT http://localhost:5137/api/supplier/11/deactivate
-curl "http://localhost:5137/api/supplier"                              # 200, no incluye al 11
-curl "http://localhost:5137/api/supplier?includeInactive=true"         # 200, sí lo incluye
-
-# Reactivar -> 200 con status=true
-curl -X PUT http://localhost:5137/api/supplier/11/activate
-
-# GET inexistente -> 404 ; DELETE con repuestos asociados -> 409 (RESTRICT)
-curl http://localhost:5137/api/supplier/9999
-curl -X DELETE http://localhost:5137/api/supplier/1
-# (el mismo endpoint responde 200 sin asociaciones: se demuestra al final de la sección de asociaciones)
-```
-
-### Asociaciones repuesto – proveedor
-
-```bash
-# Crear -> 201
-curl -X POST http://localhost:5137/api/sparepartsupplier -H "Content-Type: application/json" \
-  -d '{"idSparePart":11,"idSupplier":11,"offeredPrice":15.75,"estimatedDeliveryDays":7}'
-
-# Misma pareja otra vez -> 409
-curl -X POST http://localhost:5137/api/sparepartsupplier -H "Content-Type: application/json" \
-  -d '{"idSparePart":11,"idSupplier":11,"offeredPrice":10,"estimatedDeliveryDays":3}'
-
-# Repuesto inexistente -> 404/400 ; proveedor inexistente -> 404/400
-curl -X POST http://localhost:5137/api/sparepartsupplier -H "Content-Type: application/json" \
-  -d '{"idSparePart":9999,"idSupplier":11,"offeredPrice":10,"estimatedDeliveryDays":3}'
-curl -X POST http://localhost:5137/api/sparepartsupplier -H "Content-Type: application/json" \
-  -d '{"idSparePart":11,"idSupplier":9999,"offeredPrice":10,"estimatedDeliveryDays":3}'
-
-# Proveedor desactivado -> 400 (se desactiva el 11, se intenta asociarlo a otro repuesto sembrado y se reactiva)
-curl -X PUT http://localhost:5137/api/supplier/11/deactivate
-curl -X POST http://localhost:5137/api/sparepartsupplier -H "Content-Type: application/json" \
-  -d '{"idSparePart":2,"idSupplier":11,"offeredPrice":5,"estimatedDeliveryDays":2}'
-#   -> 400 {"detail":"El proveedor 11 está desactivado; reactivelo antes de asociarlo."}
-curl -X PUT http://localhost:5137/api/supplier/11/activate
-
-# Actualizar precio y días -> 200 con los valores nuevos
-curl -X PUT http://localhost:5137/api/sparepartsupplier/11/11 -H "Content-Type: application/json" \
-  -d '{"offeredPrice":20.5,"estimatedDeliveryDays":10}'
-
-# Filtros independientes y combinados
-curl "http://localhost:5137/api/sparepartsupplier?idSparePart=11"     # 200, todos del repuesto 11
-curl "http://localhost:5137/api/sparepartsupplier?idSupplier=11"      # 200, todos del proveedor 11
-curl "http://localhost:5137/api/sparepartsupplier?idSparePart=11&idSupplier=11"   # 200, exactamente 1
-
-# Coherencia de detalles: los contadores coinciden con las colecciones y traen
-# offeredPrice + estimatedDeliveryDays de cada asociación
-curl http://localhost:5137/api/sparepart/11     # data.supplierCount == data.suppliers.length
-curl http://localhost:5137/api/supplier/11      # data.sparePartCount == data.spareParts.length
-
-# Desasociar -> 200 ; repetir -> 404 (la pareja ya no existe)
-curl -X DELETE http://localhost:5137/api/sparepartsupplier/11/11
-curl -X DELETE http://localhost:5137/api/sparepartsupplier/11/11
-
-# Ya sin asociaciones, los registros creados en este recorrido se pueden borrar -> 200
-curl -X DELETE http://localhost:5137/api/sparepart/11
-curl -X DELETE http://localhost:5137/api/supplier/11
-```
-
----
-
-## Revisión del código
-
-- Los detalles de repuestos y proveedores incluyen sus asociaciones y condiciones.
-- Los vehículos se dan de baja sin eliminar su historial.
-- Editar un vehículo sin enviar `image` conserva la referencia actual.
-- Las imágenes se validan con SkiaSharp: se comprueba el formato y se intenta decodificar
-  el contenido. Se permiten JPEG, PNG, GIF y WebP, hasta 5 MB y 20 millones de píxeles.
-- El archivo anterior se elimina después de guardar el reemplazo. Si falla el guardado,
-  se descarta el archivo nuevo.
-- Las claves únicas y las relaciones también están configuradas en SQL Server.
-
-## Pruebas
-
-Los scripts de `verificacion/` permiten revisar los módulos en una base de pruebas.
-Sus resultados dependen de que la API apunte a esa misma base y de ejecutar las
-baterías en el orden indicado. No se deben ejecutar contra la base usada para la entrega.
-
-La comprobación posterior a la limpieza de comentarios se registra al final de este
-archivo. El resultado de una batería no garantiza que se hayan probado todos los casos.
-
-## Cómo reproducir la verificación
-
-Todo se ejecuta contra una BD desechable y almacenamiento temporal; **no toca** la BD
-`FlotaVehicular` ni `ERP9`.
-
-```powershell
-# 1. Crear la BD de prueba e aplicar la migración (la semilla corre sola; es idempotente)
-sqlcmd -S localhost -C -E -Q "CREATE DATABASE FlotaVehicular_RevVerify"
-$env:ConnectionStrings__FlotaVehicular = 'Server=localhost;Database=FlotaVehicular_RevVerify;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
-cd C:\Web\FlotaVehicular
-dotnet ef database update --project FlotaVehicular.Infrastructure --startup-project FlotaVehicular.WebAPI
-
-# 2. Generar los archivos de prueba (real.png/jpg/gif, corrupt.png, fake.png, big.png)
-powershell -ExecutionPolicy Bypass -File .\verificacion\Nuevos-Archivos-Prueba.ps1
-
-# 3. Arrancar el API apuntando a la BD de prueba y a un almacén temporal
-$env:Storage__VehicleImagesPath = "$env:TEMP\opencode\flota-imgs-verify"
-cd FlotaVehicular.WebAPI
-dotnet run --launch-profile http        # http://localhost:5137
-
-# 4. Ejecutar las baterías (en orden: la 2 asume los datos que crea la 1)
-powershell -ExecutionPolicy Bypass -File .\verificacion\Bateria1-Fixes.ps1   # 35/35
-powershell -ExecutionPolicy Bypass -File .\verificacion\Bateria2-CRUD.ps1    # 63/63
-
-# 5. Al terminar: eliminar la BD desechable y el almacén temporal
-#    (la Batería 1 crea y elimina su trigger de prueba en la BD de prueba)
-```
-
-Notas:
-
-- Los scripts usan PowerShell 5.1+ y `curl.exe` (para multipart); las respuestas se
-  validan con `Invoke-WebRequest`.
-- La Batería 1 necesita `sqlcmd` autenticado por Windows sobre
-  `FlotaVehicular_RevVerify` (variable `$testDb` al inicio del script).
-- Las baterías no son reentrantes sobre una BD ya usada (crean registros propios);
-  para repetir la corrida, recrea la BD (paso 1).
-
-## Organización del código
-
-Se conserva la arquitectura de ERP9: los controladores reciben las solicitudes,
-los servicios aplican las reglas y los repositorios consultan o guardan con EF Core.
-Los DTO evitan devolver las entidades directamente y Mapster realiza los mapeos.
-Los importes usan `decimal` y las respuestas usan `Result<T>`.
-
-SkiaSharp se usa únicamente para leer y validar imágenes. En Windows se restaura con
-NuGet. Para ejecutar en Linux también se necesitan sus componentes nativos de Linux.
-
-## Pendientes de integración (otro integrante)
-
-1. **Módulos de técnicos, especialidades y órdenes de trabajo**: se conectarán al mismo
-   `AppDbContext` (`FlotaVehicular.Infrastructure.Data`) y pueden reutilizar el patrón
-   repositorio/servicio/DTO/`Result<T>` ya presente. El esquema base ya está aplicado
-   (ver [Migración — estado real](#migración--estado-real)): generen sus tablas como
-   **nuevas migraciones encima de `InitialCreate`**.
-2. **Excepciones globales**: queda pendiente el middleware de manejo global acordado;
-   hoy los errores inesperados responden con la página de desarrollo de ASP.NET Core.
-   Los errores controlados ya salen en formato `Result<T>` con su código HTTP.
-3. Al agregar los módulos futuros, recordar que los enums se envían como texto
-   (`JsonStringEnumConverter` ya está registrado en `Program.cs`, en modo estricto).
-
-## Comprobación del 19/10/2026
-
-- Compilación de la solución: 0 errores y 0 advertencias.
-- 22 comprobaciones HTTP aprobadas: consultas de los seis módulos, paginación,
-  detalles de asociaciones, stock bajo, referencias inexistentes y entradas inválidas.
-- 12 pruebas dirigidas aprobadas: imágenes PNG/JPEG/GIF/WebP válidas, archivos
-  falsos o incompletos, tamaño máximo y edición de vehículo conservando su imagen.
-- Los casos de imagen y mapeo se probaron de forma aislada; la consulta de los
-  catálogos se hizo contra SQL Server. En esta revisión no se repitió el CRUD
-  completo ni la prueba de recuperación de archivos tras reiniciar.
-- Las migraciones no cambiaron y no se modificaron los datos existentes.
-
-Para ver los cambios al ejecutar desde Visual Studio, detener la API y volver a
-iniciarla con F5.
+Las respuestas paginadas incluyen `pageNumber`, `pageSize`, `totalRecords` y `totalPages`, junto con la colección en `data`. Cuando una búsqueda o filtro no encuentra resultados, la consulta devuelve una colección vacía con código `200`.
