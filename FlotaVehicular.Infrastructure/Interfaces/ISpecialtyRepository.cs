@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a las especialidades de mantenimiento.
 public interface ISpecialtyRepository
 {
     Task<IEnumerable<Specialty>> GetAllAsync(SpecialtyQueryDto query);

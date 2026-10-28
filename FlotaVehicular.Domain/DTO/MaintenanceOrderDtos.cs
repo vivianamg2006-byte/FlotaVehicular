@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para crear una orden de mantenimiento.
 public record class MaintenanceOrderCreateDto
 {
     [Range(1, int.MaxValue, ErrorMessage = "El vehículo es obligatorio.")]
@@ -24,6 +25,7 @@ public record class MaintenanceOrderCreateDto
     public OrderPriority? Priority { get; set; }
 }
 
+// Orden de mantenimiento en la vista de listados.
 public record class MaintenanceOrderListDto
 {
     public int IdMaintenanceOrder { get; set; }
@@ -44,6 +46,7 @@ public record class MaintenanceOrderListDto
     public DateTime CreatedAt { get; set; }
 }
 
+// Orden de mantenimiento con el detalle de la unidad que la recibió.
 public record class MaintenanceOrderDetailDto
 {
     public int IdMaintenanceOrder { get; set; }
@@ -66,6 +69,7 @@ public record class MaintenanceOrderDetailDto
     public DateTime CreatedAt { get; set; }
 }
 
+// Filtros y paginación para consultar órdenes de mantenimiento.
 public record class MaintenanceOrderQueryDto
 {
     public OrderStatus? Status { get; set; }

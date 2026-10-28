@@ -3,20 +3,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Data.Seed;
 
+// Carga los registros iniciales de la flota en la base de datos.
 public static class FleetSeeder
 {
+    // Inserta el catálogo base y persiste los cambios.
     public static void Seed(DbContext context)
     {
         SeedCatalogs(context);
         context.SaveChanges();
     }
 
+    // Variante asíncrona del alta de los datos iniciales.
     public static async Task SeedAsync(DbContext context, CancellationToken ct = default)
     {
         SeedCatalogs(context);
         await context.SaveChangesAsync(ct);
     }
 
+    // Puebla las tablas de catálogos, vehículos, técnicos y órdenes de ejemplo.
     private static void SeedCatalogs(DbContext context)
     {
         var categories = context.Set<VehicleCategory>();

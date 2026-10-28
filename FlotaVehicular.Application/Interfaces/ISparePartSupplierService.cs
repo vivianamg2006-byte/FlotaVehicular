@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de las ofertas de compra entre repuestos y proveedores.
 public interface ISparePartSupplierService
 {
     Task<Result<IEnumerable<SparePartSupplierListDto>>> GetAllAsync(SparePartSupplierQueryDto query);

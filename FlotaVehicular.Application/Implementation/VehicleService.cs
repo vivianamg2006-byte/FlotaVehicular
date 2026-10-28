@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión de vehículos y su mantenimiento preventivo.
 public class VehicleService : IVehicleService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class VehicleService : IVehicleService
         _mapper = mapper;
     }
 
+    // Lista los vehículos que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<VehicleListDto>>> GetAllAsync(VehicleQueryDto query)
     {
         var vehicles = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class VehicleService : IVehicleService
         return Result<IEnumerable<VehicleListDto>>.Success(data);
     }
 
+    // Lista vehículos con paginación y filtros.
     public async Task<Result<IEnumerable<VehicleListDto>>> GetPagedAsync(VehicleQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class VehicleService : IVehicleService
         return Result<IEnumerable<VehicleListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de un vehículo.
     public async Task<Result<VehicleDetailDto>> GetByIdAsync(int id)
     {
         var vehicle = await _repository.GetByIdAsync(id);
@@ -53,6 +57,7 @@ public class VehicleService : IVehicleService
         return Result<VehicleDetailDto>.Success(_mapper.Map<VehicleDetailDto>(vehicle));
     }
 
+    // Registra un vehículo nuevo.
     public async Task<Result<VehicleDetailDto>> AddAsync(VehicleCreateDto vehicle)
     {
         var validationError = await ValidateAsync(vehicle, null);
@@ -74,6 +79,7 @@ public class VehicleService : IVehicleService
         return Result<VehicleDetailDto>.Success(data, 201, "Created", "Registro creado.");
     }
 
+    // Actualiza un vehículo existente.
     public async Task<Result<VehicleDetailDto>> UpdateAsync(int id, VehicleUpdateDto vehicle)
     {
         var entity = await _repository.GetForUpdateAsync(id);
@@ -105,6 +111,7 @@ public class VehicleService : IVehicleService
         return Result<VehicleDetailDto>.Success(data, 200, "OK", "Registro actualizado.");
     }
 
+    // Cambia el estado operativo de un vehículo.
     public async Task<Result<VehicleDetailDto>> ChangeStatusAsync(int id, VehicleStatusDto status)
     {
         if (status.Status is null)
@@ -141,6 +148,7 @@ public class VehicleService : IVehicleService
         return Result<VehicleDetailDto>.Success(data, 200, "OK", "Estado actualizado.");
     }
 
+    // Da de baja lógicamente un vehículo.
     public async Task<Result<int>> DeactivateAsync(int id)
     {
         var vehicle = await _repository.GetByIdAsync(id);

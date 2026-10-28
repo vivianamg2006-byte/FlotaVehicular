@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de la gestión de especialidades.
 public interface ISpecialtyService
 {
     Task<Result<IEnumerable<SpecialtyListDto>>> GetAllAsync(SpecialtyQueryDto query);

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints del catálogo de repuestos y su nivel de stock.
 [Route("api/sparepart")]
 [ApiController]
 public class SparePartController : ControllerBase
@@ -15,6 +16,7 @@ public class SparePartController : ControllerBase
         _service = service;
     }
 
+    // Lista los repuestos que cumplen el filtro indicado.
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] SparePartQueryDto query)
     {
@@ -22,6 +24,7 @@ public class SparePartController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista repuestos con paginación y filtros.
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] SparePartQueryDto query)
     {
@@ -29,6 +32,7 @@ public class SparePartController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista repuestos cuyo stock está por debajo del mínimo.
     [HttpGet("below-minimum-stock")]
     public async Task<IActionResult> GetBelowMinimumStockAsync([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
@@ -36,6 +40,7 @@ public class SparePartController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el detalle de un repuesto con sus proveedores.
     [HttpGet("{id:int}", Name = "GetSparePartById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -43,6 +48,7 @@ public class SparePartController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Registra un repuesto nuevo.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SparePartCreateDto sparePart)
     {
@@ -53,6 +59,7 @@ public class SparePartController : ControllerBase
         return CreatedAtRoute("GetSparePartById", new { id = result.Data!.IdSparePart }, result);
     }
 
+    // Actualiza un repuesto existente.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] SparePartUpdateDto sparePart)
     {
@@ -60,6 +67,7 @@ public class SparePartController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Elimina un repuesto que no tiene proveedores asociados.
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

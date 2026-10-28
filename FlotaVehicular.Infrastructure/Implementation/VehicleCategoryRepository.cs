@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a las categorías de vehículo y sus vehículos asociados.
 public class VehicleCategoryRepository : IVehicleCategoryRepository
 {
     private readonly AppDbContext _context;

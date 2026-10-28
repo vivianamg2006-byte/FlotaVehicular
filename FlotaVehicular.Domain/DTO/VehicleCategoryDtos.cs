@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para registrar una categoría de vehículo.
 public record class VehicleCategoryCreateDto
 {
     [Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]
@@ -15,6 +16,7 @@ public record class VehicleCategoryCreateDto
     public int PreventiveMaintenanceIntervalKm { get; set; }
 }
 
+// Datos para actualizar una categoría de vehículo.
 public record class VehicleCategoryUpdateDto
 {
     [Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]
@@ -28,6 +30,7 @@ public record class VehicleCategoryUpdateDto
     public int PreventiveMaintenanceIntervalKm { get; set; }
 }
 
+// Categoría en la vista resumida de los listados.
 public record class VehicleCategoryListDto
 {
     public int IdVehicleCategory { get; set; }
@@ -37,6 +40,7 @@ public record class VehicleCategoryListDto
     public int VehicleCount { get; set; }
 }
 
+// Categoría con el detalle de sus vehículos.
 public record class VehicleCategoryDetailDto
 {
     public int IdVehicleCategory { get; set; }
@@ -48,6 +52,7 @@ public record class VehicleCategoryDetailDto
     public List<string> VehicleCodes { get; set; } = new();
 }
 
+// Filtros y paginación para consultar categorías.
 public record class VehicleCategoryQueryDto
 {
     [StringLength(80, ErrorMessage = "El texto de búsqueda no puede superar 80 caracteres.")]

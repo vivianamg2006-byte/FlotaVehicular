@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de proveedores.
 public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 {
     public void Configure(EntityTypeBuilder<Supplier> entity)

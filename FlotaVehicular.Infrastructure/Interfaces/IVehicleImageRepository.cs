@@ -2,6 +2,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a las imágenes de los vehículos y a su archivo en disco.
 public interface IVehicleImageRepository
 {
     Task<IEnumerable<VehicleImage>> GetByVehicleAsync(int vehicleId);

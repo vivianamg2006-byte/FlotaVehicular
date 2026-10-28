@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión de categorías de vehículo.
 public class VehicleCategoryService : IVehicleCategoryService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class VehicleCategoryService : IVehicleCategoryService
         _mapper = mapper;
     }
 
+    // Lista las categorías que cumplen el criterio de búsqueda.
     public async Task<Result<IEnumerable<VehicleCategoryListDto>>> GetAllAsync(string? search)
     {
         var categories = await _repository.GetAllAsync(search?.Trim());
@@ -29,6 +31,7 @@ public class VehicleCategoryService : IVehicleCategoryService
         return Result<IEnumerable<VehicleCategoryListDto>>.Success(data);
     }
 
+    // Lista categorías con paginación y búsqueda.
     public async Task<Result<IEnumerable<VehicleCategoryListDto>>> GetPagedAsync(VehicleCategoryQueryDto query)
     {
         var error = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class VehicleCategoryService : IVehicleCategoryService
         return Result<IEnumerable<VehicleCategoryListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de una categoría con sus vehículos.
     public async Task<Result<VehicleCategoryDetailDto>> GetByIdAsync(int id)
     {
         var category = await _repository.GetByIdAsync(id);
@@ -53,6 +57,7 @@ public class VehicleCategoryService : IVehicleCategoryService
         return Result<VehicleCategoryDetailDto>.Success(_mapper.Map<VehicleCategoryDetailDto>(category));
     }
 
+    // Registra una categoría nueva.
     public async Task<Result<VehicleCategoryDetailDto>> AddAsync(VehicleCategoryCreateDto category)
     {
         var name = category.Name!.Trim();
@@ -71,6 +76,7 @@ public class VehicleCategoryService : IVehicleCategoryService
         return Result<VehicleCategoryDetailDto>.Success(data, 201, "Created", "Registro creado.");
     }
 
+    // Actualiza una categoría existente.
     public async Task<Result<VehicleCategoryDetailDto>> UpdateAsync(int id, VehicleCategoryUpdateDto category)
     {
         var entity = await _repository.GetForUpdateAsync(id);
@@ -95,6 +101,7 @@ public class VehicleCategoryService : IVehicleCategoryService
             200, "OK", "Registro actualizado.");
     }
 
+    // Elimina una categoría que no tiene vehículos asociados.
     public async Task<Result<int>> DeleteAsync(int id)
     {
         var entity = await _repository.GetForUpdateAsync(id);

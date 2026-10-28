@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a los técnicos y sus especialidades.
 public class TechnicianRepository : ITechnicianRepository
 {
     private readonly AppDbContext _context;

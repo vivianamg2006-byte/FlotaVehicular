@@ -1,7 +1,9 @@
 namespace FlotaVehicular.Domain.Entities;
 
+// Relación N:N entre técnico y especialidad con su nivel de certificación.
 public class TechnicianSpecialty
 {
+    // Identificador del técnico asociado.
     public int IdTechnician { get; set; }
     public int IdSpecialty { get; set; }
 

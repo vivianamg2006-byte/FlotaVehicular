@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión de especialidades.
 public class SpecialtyService : ISpecialtyService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class SpecialtyService : ISpecialtyService
         _mapper = mapper;
     }
 
+    // Lista las especialidades que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<SpecialtyListDto>>> GetAllAsync(SpecialtyQueryDto query)
     {
         var specialties = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class SpecialtyService : ISpecialtyService
         return Result<IEnumerable<SpecialtyListDto>>.Success(data);
     }
 
+    // Lista especialidades con paginación y búsqueda.
     public async Task<Result<IEnumerable<SpecialtyListDto>>> GetPagedAsync(SpecialtyQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class SpecialtyService : ISpecialtyService
         return Result<IEnumerable<SpecialtyListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de una especialidad con sus técnicos.
     public async Task<Result<SpecialtyDetailDto>> GetByIdAsync(int id)
     {
         var specialty = await _repository.GetByIdAsync(id);
@@ -53,6 +57,7 @@ public class SpecialtyService : ISpecialtyService
         return Result<SpecialtyDetailDto>.Success(_mapper.Map<SpecialtyDetailDto>(specialty));
     }
 
+    // Registra una especialidad nueva.
     public async Task<Result<SpecialtyDetailDto>> AddAsync(SpecialtyCreateDto specialty)
     {
         var name = specialty.Name!.Trim();
@@ -72,6 +77,7 @@ public class SpecialtyService : ISpecialtyService
         return Result<SpecialtyDetailDto>.Success(data, 201, "Created", "Registro creado.");
     }
 
+    // Actualiza una especialidad existente.
     public async Task<Result<SpecialtyDetailDto>> UpdateAsync(int id, SpecialtyUpdateDto specialty)
     {
         var entity = await _repository.GetForUpdateAsync(id);
@@ -96,6 +102,7 @@ public class SpecialtyService : ISpecialtyService
         return Result<SpecialtyDetailDto>.Success(data, 200, "OK", "Registro actualizado.");
     }
 
+    // Elimina una especialidad que no tiene técnicos asociados.
     public async Task<Result<int>> DeleteAsync(int id)
     {
         var entity = await _repository.GetForUpdateAsync(id);

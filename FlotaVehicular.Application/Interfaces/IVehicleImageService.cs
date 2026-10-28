@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso del módulo de imágenes de vehículos.
 public interface IVehicleImageService
 {
     Task<Result<IEnumerable<VehicleImageDto>>> GetImagesAsync(int vehicleId);

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de vehículos y su categoría.
 public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
 {
     public void Configure(EntityTypeBuilder<Vehicle> entity)

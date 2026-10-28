@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para asociar un repuesto con un proveedor y sus condiciones de compra.
 public record class SparePartSupplierCreateDto
 {
     [Range(1, int.MaxValue, ErrorMessage = "El repuesto es obligatorio.")]
@@ -18,6 +19,7 @@ public record class SparePartSupplierCreateDto
     public int EstimatedDeliveryDays { get; set; }
 }
 
+// Datos para actualizar las condiciones de una oferta de repuesto-proveedor.
 public record class SparePartSupplierUpdateDto
 {
     [Required(ErrorMessage = "El precio ofrecido es obligatorio.")]
@@ -28,6 +30,7 @@ public record class SparePartSupplierUpdateDto
     public int EstimatedDeliveryDays { get; set; }
 }
 
+// Oferta de repuesto con el proveedor y las condiciones de esa relación.
 public record class SparePartSupplierListDto
 {
     public int IdSparePart { get; set; }
@@ -41,6 +44,7 @@ public record class SparePartSupplierListDto
     public DateTime AssociatedAt { get; set; }
 }
 
+// Filtros y paginación para consultar las ofertas repuesto-proveedor.
 public record class SparePartSupplierQueryDto
 {
     public int? IdSparePart { get; set; }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints de órdenes de mantenimiento.
 [Route("api/maintenanceorder")]
 [ApiController]
 public class MaintenanceOrderController : ControllerBase
@@ -15,6 +16,7 @@ public class MaintenanceOrderController : ControllerBase
         _service = service;
     }
 
+    // Lista las órdenes que cumplen el filtro indicado.
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] MaintenanceOrderQueryDto query)
     {
@@ -22,6 +24,7 @@ public class MaintenanceOrderController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista órdenes con paginación y filtros.
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] MaintenanceOrderQueryDto query)
     {
@@ -29,6 +32,7 @@ public class MaintenanceOrderController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el detalle de una orden de mantenimiento.
     [HttpGet("{id:int}", Name = "GetMaintenanceOrderById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -36,6 +40,7 @@ public class MaintenanceOrderController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Crea una orden de mantenimiento.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] MaintenanceOrderCreateDto order)
     {

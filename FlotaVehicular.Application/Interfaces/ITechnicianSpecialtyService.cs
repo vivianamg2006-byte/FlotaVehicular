@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de las asociaciones entre técnicos y especialidades.
 public interface ITechnicianSpecialtyService
 {
     Task<Result<IEnumerable<TechnicianSpecialtyListDto>>> GetAllAsync(TechnicianSpecialtyQueryDto query);

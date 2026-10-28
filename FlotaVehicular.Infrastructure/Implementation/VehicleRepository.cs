@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a los vehículos, sus categorías e historial de órdenes.
 public class VehicleRepository : IVehicleRepository
 {
     private readonly AppDbContext _context;

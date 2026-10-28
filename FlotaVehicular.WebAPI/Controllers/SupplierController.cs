@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints de proveedores de repuestos.
 [Route("api/supplier")]
 [ApiController]
 public class SupplierController : ControllerBase
@@ -15,6 +16,7 @@ public class SupplierController : ControllerBase
         _service = service;
     }
 
+    // Lista los proveedores que cumplen el filtro indicado.
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] SupplierQueryDto query)
     {
@@ -22,6 +24,7 @@ public class SupplierController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista proveedores con paginación y búsqueda.
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] SupplierQueryDto query)
     {
@@ -29,6 +32,7 @@ public class SupplierController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el detalle de un proveedor con sus repuestos.
     [HttpGet("{id:int}", Name = "GetSupplierById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -36,6 +40,7 @@ public class SupplierController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Registra un proveedor nuevo.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SupplierCreateDto supplier)
     {
@@ -46,6 +51,7 @@ public class SupplierController : ControllerBase
         return CreatedAtRoute("GetSupplierById", new { id = result.Data!.IdSupplier }, result);
     }
 
+    // Actualiza un proveedor existente.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] SupplierUpdateDto supplier)
     {
@@ -53,6 +59,7 @@ public class SupplierController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Desactiva un proveedor conservando sus repuestos.
     [HttpPut("{id:int}/deactivate")]
     public async Task<IActionResult> DeactivateAsync(int id)
     {
@@ -60,6 +67,7 @@ public class SupplierController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Reactiva un proveedor desactivado.
     [HttpPut("{id:int}/activate")]
     public async Task<IActionResult> ActivateAsync(int id)
     {
@@ -67,6 +75,7 @@ public class SupplierController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Elimina un proveedor que no tiene repuestos asociados.
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión de técnicos.
 public class TechnicianService : ITechnicianService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class TechnicianService : ITechnicianService
         _mapper = mapper;
     }
 
+    // Lista los técnicos que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<TechnicianListDto>>> GetAllAsync(TechnicianQueryDto query)
     {
         var technicians = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class TechnicianService : ITechnicianService
         return Result<IEnumerable<TechnicianListDto>>.Success(data);
     }
 
+    // Lista técnicos con paginación y filtros.
     public async Task<Result<IEnumerable<TechnicianListDto>>> GetPagedAsync(TechnicianQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class TechnicianService : ITechnicianService
         return Result<IEnumerable<TechnicianListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de un técnico con sus especialidades.
     public async Task<Result<TechnicianDetailDto>> GetByIdAsync(int id)
     {
         var technician = await _repository.GetByIdAsync(id);
@@ -53,6 +57,7 @@ public class TechnicianService : ITechnicianService
         return Result<TechnicianDetailDto>.Success(_mapper.Map<TechnicianDetailDto>(technician));
     }
 
+    // Registra un técnico nuevo.
     public async Task<Result<TechnicianDetailDto>> AddAsync(TechnicianCreateDto technician)
     {
         var identification = technician.IdentificationNumber!.Trim();
@@ -80,6 +85,7 @@ public class TechnicianService : ITechnicianService
         return Result<TechnicianDetailDto>.Success(data, 201, "Created", "Registro creado.");
     }
 
+    // Actualiza un técnico existente.
     public async Task<Result<TechnicianDetailDto>> UpdateAsync(int id, TechnicianUpdateDto technician)
     {
         var entity = await _repository.GetForUpdateAsync(id);
@@ -113,6 +119,7 @@ public class TechnicianService : ITechnicianService
         return Result<TechnicianDetailDto>.Success(data, 200, "OK", "Registro actualizado.");
     }
 
+    // Desactiva un técnico conservando sus especialidades.
     public async Task<Result<TechnicianDetailDto>> DeactivateAsync(int id)
     {
         var technician = await _repository.GetByIdAsync(id);
@@ -136,6 +143,7 @@ public class TechnicianService : ITechnicianService
         return Result<TechnicianDetailDto>.Success(data, 200, "OK", "Técnico desactivado.");
     }
 
+    // Reactiva un técnico desactivado.
     public async Task<Result<TechnicianDetailDto>> ActivateAsync(int id)
     {
         var technician = await _repository.GetByIdAsync(id);

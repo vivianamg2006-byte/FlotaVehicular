@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a las órdenes de mantenimiento y sus datos de apoyo.
 public interface IMaintenanceOrderRepository
 {
     Task<IEnumerable<MaintenanceOrder>> GetPagedAsync(MaintenanceOrderQueryDto query);

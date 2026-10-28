@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión de órdenes de mantenimiento.
 public class MaintenanceOrderService : IMaintenanceOrderService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class MaintenanceOrderService : IMaintenanceOrderService
         _mapper = mapper;
     }
 
+    // Lista órdenes con paginación y filtros.
     public async Task<Result<IEnumerable<MaintenanceOrderListDto>>> GetPagedAsync(MaintenanceOrderQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -34,6 +36,7 @@ public class MaintenanceOrderService : IMaintenanceOrderService
         return Result<IEnumerable<MaintenanceOrderListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Lista las órdenes que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<MaintenanceOrderListDto>>> GetAllAsync(MaintenanceOrderQueryDto query)
     {
         var orders = await _repository.GetAllAsync(query);
@@ -43,6 +46,7 @@ public class MaintenanceOrderService : IMaintenanceOrderService
         return Result<IEnumerable<MaintenanceOrderListDto>>.Success(data);
     }
 
+    // Devuelve el detalle de una orden de mantenimiento.
     public async Task<Result<MaintenanceOrderDetailDto>> GetByIdAsync(int id)
     {
         var order = await _repository.GetByIdAsync(id);
@@ -53,6 +57,7 @@ public class MaintenanceOrderService : IMaintenanceOrderService
         return Result<MaintenanceOrderDetailDto>.Success(_mapper.Map<MaintenanceOrderDetailDto>(order));
     }
 
+    // Crea una orden de mantenimiento.
     public async Task<Result<MaintenanceOrderDetailDto>> AddAsync(MaintenanceOrderCreateDto order)
     {
         var vehicle = await _repository.GetVehicleAsync(order.IdVehicle);

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a las órdenes de mantenimiento y sus datos de apoyo.
 public class MaintenanceOrderRepository : IMaintenanceOrderRepository
 {
     private readonly AppDbContext _context;

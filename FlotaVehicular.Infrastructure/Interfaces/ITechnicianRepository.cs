@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a los técnicos y sus especialidades.
 public interface ITechnicianRepository
 {
     Task<IEnumerable<Technician>> GetAllAsync(TechnicianQueryDto query);

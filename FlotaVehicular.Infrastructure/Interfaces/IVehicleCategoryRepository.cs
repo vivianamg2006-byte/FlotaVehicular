@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a las categorías de vehículo y sus vehículos asociados.
 public interface IVehicleCategoryRepository
 {
     Task<IEnumerable<VehicleCategory>> GetAllAsync(string? search);

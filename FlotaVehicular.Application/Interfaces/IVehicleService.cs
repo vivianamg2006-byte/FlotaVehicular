@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de la gestión de vehículos y su mantenimiento preventivo.
 public interface IVehicleService
 {
     Task<Result<IEnumerable<VehicleListDto>>> GetAllAsync(VehicleQueryDto query);

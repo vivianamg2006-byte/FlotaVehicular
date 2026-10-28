@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Validations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos del archivo de imagen que se sube o reemplaza.
 public record class VehicleImageUploadDto
 {
     [Required(ErrorMessage = "El nombre del archivo es obligatorio.")]
@@ -23,6 +24,7 @@ public record class VehicleImageUploadDto
     public bool IsMain { get; set; }
 }
 
+// Imagen de un vehículo lista para ser devuelta en las respuestas.
 public record class VehicleImageDto
 {
     public int IdVehicleImage { get; set; }
@@ -36,6 +38,7 @@ public record class VehicleImageDto
     public bool IsMain { get; set; }
 }
 
+// Contenido de la imagen en memoria, listo para enviarlo como respuesta.
 public record class VehicleImageFileDto
 {
     public byte[] Content { get; set; } = Array.Empty<byte>();

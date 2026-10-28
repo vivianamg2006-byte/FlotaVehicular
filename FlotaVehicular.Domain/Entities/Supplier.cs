@@ -1,7 +1,9 @@
 namespace FlotaVehicular.Domain.Entities;
 
+// Proveedor de repuestos que puede ofrecer condiciones de compra.
 public class Supplier
 {
+    // Identificador único del proveedor.
     public int IdSupplier { get; set; }
     public string Name { get; set; } = null!;
     public string Contact { get; set; } = null!;

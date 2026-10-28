@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
+// Punto de partida de la API: aquí se registran los servicios y el pipeline de la respuesta.
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -23,12 +24,14 @@ builder.Services.AddProblemDetails();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        // Los enums se envían como texto y las propiedades se serializan en camelCase.
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false));
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     })
     .ConfigureApiBehaviorOptions(options =>
     {
+        // Los errores de validación se devuelven con el mismo formato Result<T>.
         options.InvalidModelStateResponseFactory = context =>
         {
             var errors = context.ModelState
@@ -45,14 +48,15 @@ builder.Services.AddControllers()
         };
     });
 
+// Documentación OpenAPI de los endpoints de la API.
 builder.Services.AddOpenApi();
 
-// Esta conexión apunta a la base de FlotaVehicular.
+// Esta conexión apunta a la base de datos de la flota.
 var connectionString = builder.Configuration.GetConnectionString("FlotaVehicular")
     ?? throw new InvalidOperationException(
         "Falta la cadena de conexión 'FlotaVehicular'. Configúrela en appsettings, user-secrets o la variable ConnectionStrings__FlotaVehicular.");
 
-// La semilla se ejecuta al aplicar las migraciones.
+// EF Core con SQL Server, y la semilla que se ejecuta sobre la base de datos.
 builder.Services.AddDbContext<AppDbContext>(options => options
     .UseSqlServer(connectionString)
 
@@ -101,6 +105,7 @@ var publicPrefix = imagesRelativePath
 builder.Services.AddSingleton<IImageStorage>(_ =>
     new LocalImageStorage(builder.Environment.ContentRootPath, imagesRelativePath, publicPrefix));
 
+// Se construye la aplicación y se registra el manejo de errores HTTP.
 var app = builder.Build();
 
 app.UseExceptionHandler();

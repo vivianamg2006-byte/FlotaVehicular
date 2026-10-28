@@ -11,6 +11,7 @@ public class LocalImageStorage : IImageStorage
     private readonly string _relativeRoot;
     private readonly string _publicPrefix;
 
+    // Carpeta física y ruta pública donde se guardan las imágenes de los vehículos.
     public LocalImageStorage(string contentRootPath, string relativeRoot, string publicPrefix)
     {
         _contentRoot = Path.GetFullPath(contentRootPath);
@@ -21,6 +22,7 @@ public class LocalImageStorage : IImageStorage
         Directory.CreateDirectory(_rootPath);
     }
 
+    // Guarda el archivo con un nombre único y devuelve la ruta relativa del mismo.
     public Task<string> SaveAsync(string originalFileName, byte[] content, CancellationToken ct = default)
     {
         // El nombre generado evita sobrescribir otro archivo.
@@ -31,6 +33,7 @@ public class LocalImageStorage : IImageStorage
         return Task.FromResult($"{_relativeRoot}/{fileName}");
     }
 
+    // Elimina el archivo del disco cuando ya no se necesita.
     public Task DeleteAsync(string relativePath)
     {
         var fullPath = ResolvePath(relativePath);
@@ -41,6 +44,7 @@ public class LocalImageStorage : IImageStorage
         return Task.CompletedTask;
     }
 
+    // Lee el contenido del archivo desde el disco.
     public Task<byte[]> ReadAllBytesAsync(string relativePath)
         => File.ReadAllBytesAsync(ResolvePath(relativePath));
 
@@ -59,9 +63,11 @@ public class LocalImageStorage : IImageStorage
         return fullPath;
     }
 
+    // Convierte la ruta del archivo en la URL pública que se expone al cliente.
     public string ToPublicUrl(string relativePath)
         => $"{_publicPrefix}/{Path.GetFileName(relativePath)}";
 
+    // Valida la extensión del archivo antes de permitir su guardado.
     private static string SafeExtension(string originalFileName)
     {
         var extension = Path.GetExtension(originalFileName ?? string.Empty).ToLowerInvariant();

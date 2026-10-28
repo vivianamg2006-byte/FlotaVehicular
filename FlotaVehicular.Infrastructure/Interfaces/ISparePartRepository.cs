@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso al catálogo de repuestos y su nivel de stock.
 public interface ISparePartRepository
 {
     Task<IEnumerable<SparePart>> GetAllAsync(SparePartQueryDto query);

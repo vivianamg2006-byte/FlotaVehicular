@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de las asociaciones entre técnicos y especialidades.
 public class TechnicianSpecialtyService : ITechnicianSpecialtyService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class TechnicianSpecialtyService : ITechnicianSpecialtyService
         _mapper = mapper;
     }
 
+    // Lista las asociaciones que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<TechnicianSpecialtyListDto>>> GetAllAsync(TechnicianSpecialtyQueryDto query)
     {
         var links = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class TechnicianSpecialtyService : ITechnicianSpecialtyService
         return Result<IEnumerable<TechnicianSpecialtyListDto>>.Success(data);
     }
 
+    // Lista asociaciones con paginación y filtros.
     public async Task<Result<IEnumerable<TechnicianSpecialtyListDto>>> GetPagedAsync(TechnicianSpecialtyQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class TechnicianSpecialtyService : ITechnicianSpecialtyService
         return Result<IEnumerable<TechnicianSpecialtyListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de una asociación.
     public async Task<Result<TechnicianSpecialtyListDto>> GetByIdAsync(int idTechnician, int idSpecialty)
     {
         var link = await _repository.GetByIdAsync(idTechnician, idSpecialty);
@@ -54,6 +58,7 @@ public class TechnicianSpecialtyService : ITechnicianSpecialtyService
         return Result<TechnicianSpecialtyListDto>.Success(_mapper.Map<TechnicianSpecialtyListDto>(link));
     }
 
+    // Asocia un técnico con una especialidad.
     public async Task<Result<TechnicianSpecialtyListDto>> AddAsync(TechnicianSpecialtyCreateDto link)
     {
         var referenceError = await ValidateReferencesAsync(link.IdTechnician, link.IdSpecialty);
@@ -77,6 +82,7 @@ public class TechnicianSpecialtyService : ITechnicianSpecialtyService
         return Result<TechnicianSpecialtyListDto>.Success(data, 201, "Created", "Asociación creada.");
     }
 
+    // Actualiza la certificación de la asociación.
     public async Task<Result<TechnicianSpecialtyListDto>> UpdateAsync(int idTechnician, int idSpecialty, TechnicianSpecialtyUpdateDto link)
     {
         var entity = await _repository.GetForUpdateAsync(idTechnician, idSpecialty);
@@ -96,6 +102,7 @@ public class TechnicianSpecialtyService : ITechnicianSpecialtyService
         return Result<TechnicianSpecialtyListDto>.Success(data, 200, "OK", "Certificación actualizada.");
     }
 
+    // Desasocia una especialidad del técnico.
     public async Task<Result<int>> DeleteAsync(int idTechnician, int idSpecialty)
     {
         var entity = await _repository.GetForUpdateAsync(idTechnician, idSpecialty);

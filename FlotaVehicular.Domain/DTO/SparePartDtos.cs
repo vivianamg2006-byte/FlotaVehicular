@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para registrar un repuesto.
 public record class SparePartCreateDto
 {
     [Required(ErrorMessage = "El código del repuesto es obligatorio.")]
@@ -23,6 +24,7 @@ public record class SparePartCreateDto
     public int MinStock { get; set; }
 }
 
+// Datos para actualizar un repuesto existente.
 public record class SparePartUpdateDto
 {
     [Required(ErrorMessage = "El código del repuesto es obligatorio.")]
@@ -44,6 +46,7 @@ public record class SparePartUpdateDto
     public int MinStock { get; set; }
 }
 
+// Repuesto en la vista resumida de los listados.
 public record class SparePartListDto
 {
     public int IdSparePart { get; set; }
@@ -57,6 +60,7 @@ public record class SparePartListDto
     public int SupplierCount { get; set; }
 }
 
+// Repuesto con el detalle de sus proveedores y su nivel de stock.
 public record class SparePartDetailDto
 {
     public int IdSparePart { get; set; }
@@ -70,6 +74,7 @@ public record class SparePartDetailDto
     public int SupplierCount { get; set; }
 }
 
+// Filtros y paginación para consultar repuestos.
 public record class SparePartQueryDto
 {
     [StringLength(100, ErrorMessage = "El texto de búsqueda no puede superar 100 caracteres.")]

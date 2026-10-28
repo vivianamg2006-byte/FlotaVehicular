@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a las ofertas de compra entre repuestos y proveedores.
 public interface ISparePartSupplierRepository
 {
     Task<IEnumerable<SparePartSupplier>> GetAllAsync(SparePartSupplierQueryDto query);

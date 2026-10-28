@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión del catálogo de repuestos.
 public class SparePartService : ISparePartService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class SparePartService : ISparePartService
         _mapper = mapper;
     }
 
+    // Lista los repuestos que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<SparePartListDto>>> GetAllAsync(SparePartQueryDto query)
     {
         var spareParts = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class SparePartService : ISparePartService
         return Result<IEnumerable<SparePartListDto>>.Success(data);
     }
 
+    // Lista repuestos con paginación y filtros.
     public async Task<Result<IEnumerable<SparePartListDto>>> GetPagedAsync(SparePartQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class SparePartService : ISparePartService
         return Result<IEnumerable<SparePartListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Lista los repuestos cuyo stock está por debajo del mínimo.
     public async Task<Result<IEnumerable<SparePartListDto>>> GetBelowMinimumStockAsync(int pageNumber, int pageSize)
     {
         var query = new SparePartQueryDto
@@ -55,6 +59,7 @@ public class SparePartService : ISparePartService
         return await GetPagedAsync(query);
     }
 
+    // Devuelve el detalle de un repuesto con sus proveedores.
     public async Task<Result<SparePartDetailDto>> GetByIdAsync(int id)
     {
         var sparePart = await _repository.GetByIdAsync(id);
@@ -65,6 +70,7 @@ public class SparePartService : ISparePartService
         return Result<SparePartDetailDto>.Success(_mapper.Map<SparePartDetailDto>(sparePart));
     }
 
+    // Registra un repuesto nuevo.
     public async Task<Result<SparePartDetailDto>> AddAsync(SparePartCreateDto sparePart)
     {
         var validationError = ValidateStock(sparePart.CurrentStock, sparePart.MinStock);
@@ -88,6 +94,7 @@ public class SparePartService : ISparePartService
         return Result<SparePartDetailDto>.Success(data, 201, "Created", "Registro creado.");
     }
 
+    // Actualiza un repuesto existente.
     public async Task<Result<SparePartDetailDto>> UpdateAsync(int id, SparePartUpdateDto sparePart)
     {
         var entity = await _repository.GetForUpdateAsync(id);
@@ -116,6 +123,7 @@ public class SparePartService : ISparePartService
         return Result<SparePartDetailDto>.Success(data, 200, "OK", "Registro actualizado.");
     }
 
+    // Elimina un repuesto que no tiene proveedores asociados.
     public async Task<Result<int>> DeleteAsync(int id)
     {
         var entity = await _repository.GetForUpdateAsync(id);

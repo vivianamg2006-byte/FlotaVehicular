@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a las especialidades de mantenimiento.
 public class SpecialtyRepository : ISpecialtyRepository
 {
     private readonly AppDbContext _context;

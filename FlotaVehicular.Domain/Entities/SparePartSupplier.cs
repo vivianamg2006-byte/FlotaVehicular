@@ -1,8 +1,12 @@
 namespace FlotaVehicular.Domain.Entities;
 
+// Relación N:N entre un repuesto y un proveedor, con las condiciones de esa oferta.
 public class SparePartSupplier
 {
+    // Identificador del repuesto ofertado.
     public int IdSparePart { get; set; }
+
+    // Identificador del proveedor al que se ofrece el repuesto.
     public int IdSupplier { get; set; }
 
     // El precio y el plazo pertenecen a esta oferta, no al catálogo de repuestos.

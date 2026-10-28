@@ -4,6 +4,7 @@ using FlotaVehicular.Domain.Validations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para registrar un vehículo nuevo.
 public record class VehicleCreateDto
 {
     [Required(ErrorMessage = "El código del vehículo es obligatorio.")]
@@ -52,6 +53,7 @@ public record class VehicleCreateDto
     public int LastPreventiveMaintenanceMileage { get; set; }
 }
 
+// Datos para actualizar un vehículo existente.
 public record class VehicleUpdateDto
 {
     [Required(ErrorMessage = "El código del vehículo es obligatorio.")]
@@ -100,12 +102,14 @@ public record class VehicleUpdateDto
     public int LastPreventiveMaintenanceMileage { get; set; }
 }
 
+// Estado al que se cambia un vehículo mediante su endpoint.
 public record class VehicleStatusDto
 {
     [Required(ErrorMessage = "El estado es obligatorio.")]
     public VehicleStatus? Status { get; set; }
 }
 
+// Vehículo en la vista resumida de los listados.
 public record class VehicleListDto
 {
     public int IdVehicle { get; set; }
@@ -116,6 +120,7 @@ public record class VehicleListDto
     public DateTime AcquisitionDate { get; set; }
     public decimal ReferenceValue { get; set; }
     public int IdVehicleCategory { get; set; }
+    // Nombre de la categoría a la que pertenece la unidad.
     public string CategoryName { get; set; } = "";
     public string? ImagePath { get; set; }
     public string Brand { get; set; } = "";
@@ -124,11 +129,14 @@ public record class VehicleListDto
     public int CurrentMileage { get; set; }
     public int LastPreventiveMaintenanceMileage { get; set; }
     public VehicleStatus Status { get; set; }
+    // Nombre legible del estado de la unidad.
     public string StatusName { get; set; } = "";
 
+    // Kilómetros que faltan para el próximo mantenimiento preventivo.
     public int KmToNextPreventiveMaintenance { get; set; }
 }
 
+// Vehículo con el detalle completo: categoría, imágenes y kilometraje calculado.
 public record class VehicleDetailDto
 {
     public int IdVehicle { get; set; }
@@ -147,14 +155,17 @@ public record class VehicleDetailDto
     public int CurrentMileage { get; set; }
     public int LastPreventiveMaintenanceMileage { get; set; }
     public VehicleStatus Status { get; set; }
+    // Nombre legible del estado de la unidad.
     public string StatusName { get; set; } = "";
     public int KmToNextPreventiveMaintenance { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? DeactivationDate { get; set; }
     public List<VehicleImageDto> Images { get; set; } = new();
+    // Número de imágenes registradas para el vehículo.
     public int ImageCount { get; set; }
 }
 
+// Filtros y paginación para consultar vehículos.
 public record class VehicleQueryDto
 {
     [StringLength(100, ErrorMessage = "El texto de búsqueda no puede superar 100 caracteres.")]

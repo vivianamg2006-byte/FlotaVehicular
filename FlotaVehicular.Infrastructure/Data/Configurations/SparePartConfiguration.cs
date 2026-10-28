@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de repuestos y sus restricciones de stock.
 public class SparePartConfiguration : IEntityTypeConfiguration<SparePart>
 {
     public void Configure(EntityTypeBuilder<SparePart> entity)

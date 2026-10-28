@@ -6,6 +6,7 @@ namespace FlotaVehicular.Application.Mapper;
 
 public static class MapsterConfig
 {
+    // Registra todas las conversiones entre entidades y DTOs de la API.
     public static void RegisterMaps()
     {
         // Categorías

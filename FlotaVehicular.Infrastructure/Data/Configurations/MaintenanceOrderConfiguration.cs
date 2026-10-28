@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de órdenes de mantenimiento en SQL Server.
 public class MaintenanceOrderConfiguration : IEntityTypeConfiguration<MaintenanceOrder>
 {
     public void Configure(EntityTypeBuilder<MaintenanceOrder> entity)

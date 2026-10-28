@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de asociaciones repuesto-proveedor.
 public class SparePartSupplierConfiguration : IEntityTypeConfiguration<SparePartSupplier>
 {
     public void Configure(EntityTypeBuilder<SparePartSupplier> entity)

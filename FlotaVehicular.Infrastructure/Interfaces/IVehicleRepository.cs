@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.Entities;
 
 namespace FlotaVehicular.Infrastructure.Interfaces;
 
+// Acceso a los vehículos, sus categorías y sus condiciones de mantenimiento.
 public interface IVehicleRepository
 {
     Task<IEnumerable<Vehicle>> GetAllAsync(VehicleQueryDto query);

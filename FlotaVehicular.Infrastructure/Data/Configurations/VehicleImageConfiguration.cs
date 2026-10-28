@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de imágenes de vehículos.
 public class VehicleImageConfiguration : IEntityTypeConfiguration<VehicleImage>
 {
     public void Configure(EntityTypeBuilder<VehicleImage> entity)

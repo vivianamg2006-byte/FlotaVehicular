@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de especialidades.
 public class SpecialtyConfiguration : IEntityTypeConfiguration<Specialty>
 {
     public void Configure(EntityTypeBuilder<Specialty> entity)

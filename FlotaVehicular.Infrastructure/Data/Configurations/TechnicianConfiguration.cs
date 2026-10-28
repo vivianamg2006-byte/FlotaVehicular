@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FlotaVehicular.Infrastructure.Data.Configurations;
 
+// Configuración de la tabla de técnicos.
 public class TechnicianConfiguration : IEntityTypeConfiguration<Technician>
 {
     public void Configure(EntityTypeBuilder<Technician> entity)

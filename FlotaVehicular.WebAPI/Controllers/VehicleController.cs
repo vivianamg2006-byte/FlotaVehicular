@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints de vehículos: catálogo, filtros, mantenimiento preventivo y baja lógica.
 [Route("api/vehicle")]
 [ApiController]
 public class VehicleController : ControllerBase
@@ -15,6 +16,7 @@ public class VehicleController : ControllerBase
         _service = service;
     }
 
+    // Lista los vehículos que cumplen el filtro indicado.
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] VehicleQueryDto query)
     {
@@ -22,6 +24,7 @@ public class VehicleController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista vehículos con paginación y filtros.
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] VehicleQueryDto query)
     {
@@ -29,6 +32,7 @@ public class VehicleController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el detalle de un vehículo con su categoría e imágenes.
     [HttpGet("{id:int}", Name = "GetVehicleById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -36,6 +40,7 @@ public class VehicleController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Registra un vehículo nuevo; nace en estado operativo.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] VehicleCreateDto vehicle)
     {
@@ -46,6 +51,7 @@ public class VehicleController : ControllerBase
         return CreatedAtRoute("GetVehicleById", new { id = result.Data!.IdVehicle }, result);
     }
 
+    // Actualiza un vehículo que no está dado de baja.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] VehicleUpdateDto vehicle)
     {
@@ -53,6 +59,7 @@ public class VehicleController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Cambia el estado operativo de un vehículo.
     [HttpPut("{id:int}/status")]
     public async Task<IActionResult> ChangeStatusAsync([FromRoute] int id, [FromBody] VehicleStatusDto status)
     {

@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de las ofertas de compra entre repuestos y proveedores.
 public class SparePartSupplierService : ISparePartSupplierService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class SparePartSupplierService : ISparePartSupplierService
         _mapper = mapper;
     }
 
+    // Lista las ofertas que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<SparePartSupplierListDto>>> GetAllAsync(SparePartSupplierQueryDto query)
     {
         var links = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class SparePartSupplierService : ISparePartSupplierService
         return Result<IEnumerable<SparePartSupplierListDto>>.Success(data);
     }
 
+    // Lista ofertas con paginación y filtros.
     public async Task<Result<IEnumerable<SparePartSupplierListDto>>> GetPagedAsync(SparePartSupplierQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class SparePartSupplierService : ISparePartSupplierService
         return Result<IEnumerable<SparePartSupplierListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de una oferta de repuesto-proveedor.
     public async Task<Result<SparePartSupplierListDto>> GetByIdAsync(int idSparePart, int idSupplier)
     {
         var link = await _repository.GetByIdAsync(idSparePart, idSupplier);
@@ -54,6 +58,7 @@ public class SparePartSupplierService : ISparePartSupplierService
         return Result<SparePartSupplierListDto>.Success(_mapper.Map<SparePartSupplierListDto>(link));
     }
 
+    // Registra una oferta entre un repuesto y un proveedor.
     public async Task<Result<SparePartSupplierListDto>> AddAsync(SparePartSupplierCreateDto link)
     {
         var referenceError = await ValidateReferencesAsync(link.IdSparePart, link.IdSupplier);
@@ -77,6 +82,7 @@ public class SparePartSupplierService : ISparePartSupplierService
         return Result<SparePartSupplierListDto>.Success(data, 201, "Created", "Asociación creada.");
     }
 
+    // Actualiza las condiciones de una oferta.
     public async Task<Result<SparePartSupplierListDto>> UpdateAsync(int idSparePart, int idSupplier, SparePartSupplierUpdateDto link)
     {
         var entity = await _repository.GetForUpdateAsync(idSparePart, idSupplier);
@@ -96,6 +102,7 @@ public class SparePartSupplierService : ISparePartSupplierService
         return Result<SparePartSupplierListDto>.Success(data, 200, "OK", "Condiciones actualizadas.");
     }
 
+    // Elimina la oferta entre repuesto y proveedor.
     public async Task<Result<int>> DeleteAsync(int idSparePart, int idSupplier)
     {
         var entity = await _repository.GetForUpdateAsync(idSparePart, idSupplier);

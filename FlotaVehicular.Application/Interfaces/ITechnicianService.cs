@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de la gestión de técnicos.
 public interface ITechnicianService
 {
     Task<Result<IEnumerable<TechnicianListDto>>> GetAllAsync(TechnicianQueryDto query);

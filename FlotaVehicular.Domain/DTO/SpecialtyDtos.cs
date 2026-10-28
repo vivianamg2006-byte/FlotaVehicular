@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para registrar una especialidad.
 public record class SpecialtyCreateDto
 {
     [Required(ErrorMessage = "El nombre de la especialidad es obligatorio.")]
@@ -12,6 +13,7 @@ public record class SpecialtyCreateDto
     public string? Description { get; set; }
 }
 
+// Datos para actualizar una especialidad existente.
 public record class SpecialtyUpdateDto
 {
     [Required(ErrorMessage = "El nombre de la especialidad es obligatorio.")]
@@ -22,6 +24,7 @@ public record class SpecialtyUpdateDto
     public string? Description { get; set; }
 }
 
+// Especialidad en la vista resumida de los listados.
 public record class SpecialtyListDto
 {
     public int IdSpecialty { get; set; }
@@ -30,6 +33,7 @@ public record class SpecialtyListDto
     public int TechnicianCount { get; set; }
 }
 
+// Especialidad con el detalle de los técnicos certificados en ella.
 public record class SpecialtyDetailDto
 {
     public int IdSpecialty { get; set; }
@@ -39,6 +43,7 @@ public record class SpecialtyDetailDto
     public int TechnicianCount { get; set; }
 }
 
+// Filtros y paginación para consultar especialidades.
 public record class SpecialtyQueryDto
 {
     [StringLength(100, ErrorMessage = "El texto de búsqueda no puede superar 100 caracteres.")]

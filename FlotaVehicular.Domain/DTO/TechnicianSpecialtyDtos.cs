@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para asociar un técnico con una especialidad.
 public record class TechnicianSpecialtyCreateDto
 {
     [Range(1, int.MaxValue, ErrorMessage = "El técnico es obligatorio.")]
@@ -18,6 +19,7 @@ public record class TechnicianSpecialtyCreateDto
     public DateTime SinceDate { get; set; }
 }
 
+// Datos para actualizar la certificación de una asociación.
 public record class TechnicianSpecialtyUpdateDto
 {
     [Required(ErrorMessage = "El nivel de certificación es obligatorio.")]
@@ -28,6 +30,7 @@ public record class TechnicianSpecialtyUpdateDto
     public DateTime SinceDate { get; set; }
 }
 
+// Asociación entre técnico y especialidad con su nivel de certificación.
 public record class TechnicianSpecialtyListDto
 {
     public int IdTechnician { get; set; }
@@ -40,6 +43,7 @@ public record class TechnicianSpecialtyListDto
     public DateTime SinceDate { get; set; }
 }
 
+// Filtros y paginación para consultar asociaciones técnico-especialidad.
 public record class TechnicianSpecialtyQueryDto
 {
     public int? IdTechnician { get; set; }

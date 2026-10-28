@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a las imágenes de los vehículos y a su archivo en disco.
 public class VehicleImageRepository : IVehicleImageRepository
 {
     private readonly AppDbContext _context;

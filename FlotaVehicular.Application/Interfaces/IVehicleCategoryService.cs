@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de la gestión de categorías de vehículo.
 public interface IVehicleCategoryService
 {
     Task<Result<IEnumerable<VehicleCategoryListDto>>> GetAllAsync(string? search);

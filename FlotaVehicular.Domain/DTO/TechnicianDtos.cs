@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para registrar un técnico.
 public record class TechnicianCreateDto
 {
     [Required(ErrorMessage = "El nombre completo es obligatorio.")]
@@ -27,6 +28,7 @@ public record class TechnicianCreateDto
     public decimal HourlyRate { get; set; }
 }
 
+// Datos para actualizar un técnico existente.
 public record class TechnicianUpdateDto
 {
     [Required(ErrorMessage = "El nombre completo es obligatorio.")]
@@ -52,6 +54,7 @@ public record class TechnicianUpdateDto
     public decimal HourlyRate { get; set; }
 }
 
+// Técnico en la vista resumida de los listados.
 public record class TechnicianListDto
 {
     public int IdTechnician { get; set; }
@@ -66,6 +69,7 @@ public record class TechnicianListDto
     public int SpecialtyCount { get; set; }
 }
 
+// Técnico con el detalle de sus especialidades.
 public record class TechnicianDetailDto
 {
     public int IdTechnician { get; set; }
@@ -81,6 +85,7 @@ public record class TechnicianDetailDto
     public int SpecialtyCount { get; set; }
 }
 
+// Filtros y paginación para consultar técnicos.
 public record class TechnicianQueryDto
 {
     [StringLength(100, ErrorMessage = "El texto de búsqueda no puede superar 100 caracteres.")]

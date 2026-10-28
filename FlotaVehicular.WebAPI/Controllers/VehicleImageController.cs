@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints de imágenes de vehículos: carga, descarga y reemplazo.
 [Route("api/vehicle/{vehicleId:int}/images")]
 [ApiController]
 public class VehicleImageController : ControllerBase
@@ -18,6 +19,7 @@ public class VehicleImageController : ControllerBase
         _service = service;
     }
 
+    // Lista las imágenes registradas del vehículo.
     [HttpGet]
     public async Task<IActionResult> GetImagesAsync(int vehicleId)
     {
@@ -25,6 +27,7 @@ public class VehicleImageController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el archivo de imagen en el formato y nombre originales.
     [HttpGet("{imageId:int}/file")]
     public async Task<IActionResult> GetFileAsync(int vehicleId, int imageId)
     {
@@ -35,6 +38,7 @@ public class VehicleImageController : ControllerBase
         return File(result.Data!.Content, result.Data.ContentType, result.Data.FileName);
     }
 
+    // Sube una imagen al vehículo; la primera se guarda como principal.
     [HttpPost]
     [RequestSizeLimit(MaxFileSizeBytes + 2 * 1024 * 1024)]
     public async Task<IActionResult> UploadAsync(int vehicleId, [FromForm] IFormFile? file, [FromForm] bool isMain = false)
@@ -51,6 +55,7 @@ public class VehicleImageController : ControllerBase
         return CreatedAtRoute("GetVehicleById", new { id = vehicleId }, result);
     }
 
+    // Reemplaza el archivo de una imagen del vehículo.
     [HttpPut("{imageId:int}")]
     [RequestSizeLimit(MaxFileSizeBytes + 2 * 1024 * 1024)]
     public async Task<IActionResult> ReplaceAsync(int vehicleId, int imageId, [FromForm] IFormFile? file)
@@ -64,6 +69,7 @@ public class VehicleImageController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Elimina la imagen y su archivo del vehículo.
     [HttpDelete("{imageId:int}")]
     public async Task<IActionResult> DeleteAsync(int vehicleId, int imageId)
     {

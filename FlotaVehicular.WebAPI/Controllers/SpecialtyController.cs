@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints de especialidades de mantenimiento.
 [Route("api/specialty")]
 [ApiController]
 public class SpecialtyController : ControllerBase
@@ -15,6 +16,7 @@ public class SpecialtyController : ControllerBase
         _service = service;
     }
 
+    // Lista las especialidades que cumplen el filtro indicado.
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] SpecialtyQueryDto query)
     {
@@ -22,6 +24,7 @@ public class SpecialtyController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista especialidades con paginación y búsqueda.
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] SpecialtyQueryDto query)
     {
@@ -29,6 +32,7 @@ public class SpecialtyController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el detalle de una especialidad con sus técnicos.
     [HttpGet("{id:int}", Name = "GetSpecialtyById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -36,6 +40,7 @@ public class SpecialtyController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Registra una especialidad nueva.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SpecialtyCreateDto specialty)
     {
@@ -46,6 +51,7 @@ public class SpecialtyController : ControllerBase
         return CreatedAtRoute("GetSpecialtyById", new { id = result.Data!.IdSpecialty }, result);
     }
 
+    // Actualiza una especialidad existente.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] SpecialtyUpdateDto specialty)
     {
@@ -53,6 +59,7 @@ public class SpecialtyController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Elimina una especialidad que no tiene técnicos asociados.
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

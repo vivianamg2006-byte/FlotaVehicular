@@ -7,6 +7,7 @@ using MapsterMapper;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso de la gestión de proveedores.
 public class SupplierService : ISupplierService
 {
     public const int MaxPageSize = 50;
@@ -20,6 +21,7 @@ public class SupplierService : ISupplierService
         _mapper = mapper;
     }
 
+    // Lista los proveedores que cumplen el filtro indicado.
     public async Task<Result<IEnumerable<SupplierListDto>>> GetAllAsync(SupplierQueryDto query)
     {
         var suppliers = await _repository.GetAllAsync(query);
@@ -29,6 +31,7 @@ public class SupplierService : ISupplierService
         return Result<IEnumerable<SupplierListDto>>.Success(data);
     }
 
+    // Lista proveedores con paginación y búsqueda.
     public async Task<Result<IEnumerable<SupplierListDto>>> GetPagedAsync(SupplierQueryDto query)
     {
         var pagingError = ValidatePaging(query.PageNumber, query.PageSize);
@@ -43,6 +46,7 @@ public class SupplierService : ISupplierService
         return Result<IEnumerable<SupplierListDto>>.Paged(data, query.PageNumber, query.PageSize, totalRecords);
     }
 
+    // Devuelve el detalle de un proveedor con sus repuestos.
     public async Task<Result<SupplierDetailDto>> GetByIdAsync(int id)
     {
         var supplier = await _repository.GetByIdAsync(id);
@@ -53,6 +57,7 @@ public class SupplierService : ISupplierService
         return Result<SupplierDetailDto>.Success(_mapper.Map<SupplierDetailDto>(supplier));
     }
 
+    // Registra un proveedor nuevo.
     public async Task<Result<SupplierDetailDto>> AddAsync(SupplierCreateDto supplier)
     {
         var name = supplier.Name!.Trim();
@@ -73,6 +78,7 @@ public class SupplierService : ISupplierService
         return Result<SupplierDetailDto>.Success(data, 201, "Created", "Registro creado.");
     }
 
+    // Actualiza un proveedor existente.
     public async Task<Result<SupplierDetailDto>> UpdateAsync(int id, SupplierUpdateDto supplier)
     {
         var entity = await _repository.GetForUpdateAsync(id);
@@ -98,6 +104,7 @@ public class SupplierService : ISupplierService
         return Result<SupplierDetailDto>.Success(data, 200, "OK", "Registro actualizado.");
     }
 
+    // Desactiva un proveedor conservando sus repuestos.
     public async Task<Result<SupplierDetailDto>> DeactivateAsync(int id)
     {
         var supplier = await _repository.GetByIdAsync(id);
@@ -122,6 +129,7 @@ public class SupplierService : ISupplierService
             "Proveedor desactivado; sus asociaciones se conservan.");
     }
 
+    // Reactiva un proveedor desactivado.
     public async Task<Result<SupplierDetailDto>> ActivateAsync(int id)
     {
         var supplier = await _repository.GetByIdAsync(id);
@@ -144,6 +152,7 @@ public class SupplierService : ISupplierService
         return Result<SupplierDetailDto>.Success(data, 200, "OK", "Proveedor activado.");
     }
 
+    // Elimina un proveedor que no tiene repuestos asociados.
     public async Task<Result<int>> DeleteAsync(int id)
     {
         var entity = await _repository.GetForUpdateAsync(id);

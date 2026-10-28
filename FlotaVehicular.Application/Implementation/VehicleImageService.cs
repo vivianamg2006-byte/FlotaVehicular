@@ -8,6 +8,7 @@ using SkiaSharp;
 
 namespace FlotaVehicular.Application.Implementation;
 
+// Casos de uso del módulo de imágenes de vehículos.
 public class VehicleImageService : IVehicleImageService
 {
     public const long MaxFileSizeBytes = 5 * 1024 * 1024;
@@ -29,6 +30,7 @@ public class VehicleImageService : IVehicleImageService
         _mapper = mapper;
     }
 
+    // Lista las imágenes registradas del vehículo.
     public async Task<Result<IEnumerable<VehicleImageDto>>> GetImagesAsync(int vehicleId)
     {
         if (await _repository.GetVehicleForUpdateAsync(vehicleId) is null)
@@ -41,6 +43,7 @@ public class VehicleImageService : IVehicleImageService
         return Result<IEnumerable<VehicleImageDto>>.Success(data);
     }
 
+    // Sube una imagen al vehículo.
     public async Task<Result<VehicleImageDto>> UploadAsync(int vehicleId, VehicleImageUploadDto image)
     {
         var vehicle = await _repository.GetVehicleForUpdateAsync(vehicleId);
@@ -97,6 +100,7 @@ public class VehicleImageService : IVehicleImageService
         return Result<VehicleImageDto>.Success(data, 201, "Created", "Imagen subida.");
     }
 
+    // Reemplaza el archivo de una imagen del vehículo.
     public async Task<Result<VehicleImageDto>> ReplaceAsync(int vehicleId, int imageId, VehicleImageUploadDto image)
     {
         var vehicle = await _repository.GetVehicleForUpdateAsync(vehicleId);
@@ -172,6 +176,7 @@ public class VehicleImageService : IVehicleImageService
         return Result<VehicleImageDto>.Success(data, 200, "OK", "Imagen reemplazada.");
     }
 
+    // Elimina la imagen y su archivo del vehículo.
     public async Task<Result<int>> DeleteAsync(int vehicleId, int imageId)
     {
         var vehicle = await _repository.GetVehicleForUpdateAsync(vehicleId);
@@ -215,6 +220,7 @@ public class VehicleImageService : IVehicleImageService
         return Result<int>.Success(imageId, 200, "OK", "Imagen eliminada.");
     }
 
+    // Devuelve el archivo de imagen en el formato y nombre originales.
     public async Task<Result<VehicleImageFileDto>> GetFileAsync(int vehicleId, int imageId)
     {
         var image = await _repository.GetByIdAsync(vehicleId, imageId);

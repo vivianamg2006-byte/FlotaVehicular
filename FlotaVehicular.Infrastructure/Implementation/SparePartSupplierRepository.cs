@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso a las ofertas de compra entre repuestos y proveedores.
 public class SparePartSupplierRepository : ISparePartSupplierRepository
 {
     private readonly AppDbContext _context;

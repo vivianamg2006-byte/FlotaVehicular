@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.Infrastructure.Implementation;
 
+// Acceso al catálogo de repuestos y su nivel de stock.
 public class SparePartRepository : ISparePartRepository
 {
     private readonly AppDbContext _context;

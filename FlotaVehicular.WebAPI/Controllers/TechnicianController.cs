@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
+// Endpoints de técnicos y sus especialidades.
 [Route("api/technician")]
 [ApiController]
 public class TechnicianController : ControllerBase
@@ -15,6 +16,7 @@ public class TechnicianController : ControllerBase
         _service = service;
     }
 
+    // Lista los técnicos que cumplen el filtro indicado.
     [HttpGet]
     public async Task<IActionResult> GetAllAsync([FromQuery] TechnicianQueryDto query)
     {
@@ -22,6 +24,7 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista técnicos con paginación y filtros.
     [HttpGet("paged")]
     public async Task<IActionResult> GetPagedAsync([FromQuery] TechnicianQueryDto query)
     {
@@ -29,6 +32,7 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Lista técnicos activos, disponibles y certificados en la especialidad.
     [HttpGet("available")]
     public async Task<IActionResult> GetAvailableBySpecialtyAsync([FromQuery] int idSpecialty)
     {
@@ -36,6 +40,7 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Devuelve el detalle de un técnico con sus especialidades.
     [HttpGet("{id:int}", Name = "GetTechnicianById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -43,6 +48,7 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Registra un técnico nuevo.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] TechnicianCreateDto technician)
     {
@@ -53,6 +59,7 @@ public class TechnicianController : ControllerBase
         return CreatedAtRoute("GetTechnicianById", new { id = result.Data!.IdTechnician }, result);
     }
 
+    // Actualiza un técnico existente.
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] TechnicianUpdateDto technician)
     {
@@ -60,6 +67,7 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Desactiva un técnico conservando sus asociaciones.
     [HttpPut("{id:int}/deactivate")]
     public async Task<IActionResult> DeactivateAsync(int id)
     {
@@ -67,6 +75,7 @@ public class TechnicianController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Reactiva un técnico desactivado.
     [HttpPut("{id:int}/activate")]
     public async Task<IActionResult> ActivateAsync(int id)
     {

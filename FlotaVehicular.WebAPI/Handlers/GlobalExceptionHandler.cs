@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlotaVehicular.WebAPI.Handlers;
 
+// Centraliza el manejo de errores de la API y devuelve el formato Result<T>.
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
@@ -17,6 +18,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         _logger = logger;
     }
 
+    // Convierte cualquier excepción en una respuesta con el formato Result<T>.
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
@@ -29,6 +31,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
         if (exception is AppException appException)
         {
+            // Los errores de la aplicación ya traen su código y su detalle.
             status = appException.Status;
             title = appException.Title;
             detail = appException.Message;
@@ -53,6 +56,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         }
         else if (exception is DbUpdateException dbUpdateException)
         {
+            // SQL Server reporta duplicados o restricciones; se traducen a conflictos.
             if (dbUpdateException.InnerException is SqlException sqlException)
             {
                 if (sqlException.Number == 2601 || sqlException.Number == 2627)
@@ -91,6 +95,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             data = new { traceId };
         }
 
+        // Los errores internos se registran con el identificador de seguimiento.
         if (status >= StatusCodes.Status500InternalServerError)
         {
             _logger.LogError(exception, "Error no controlado {TraceId} en {Method} {Path}", traceId, httpContext.Request.Method, httpContext.Request.Path);
@@ -100,6 +105,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             _logger.LogWarning(exception, "Excepción convertida en {StatusCode} {TraceId} en {Method} {Path}", status, traceId, httpContext.Request.Method, httpContext.Request.Path);
         }
 
+        // Se arma la respuesta con el estado, el título y el detalle del error.
         var result = Result<object>.Failure(status, title, detail);
         if (data is not null)
         {

@@ -3,6 +3,7 @@ using FlotaVehicular.Domain.DTO.PatternResult;
 
 namespace FlotaVehicular.Application.Interfaces;
 
+// Casos de uso de la gestión de proveedores.
 public interface ISupplierService
 {
     Task<Result<IEnumerable<SupplierListDto>>> GetAllAsync(SupplierQueryDto query);

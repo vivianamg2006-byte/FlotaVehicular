@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FlotaVehicular.Domain.DTO;
 
+// Datos para registrar un proveedor.
 public record class SupplierCreateDto
 {
     [Required(ErrorMessage = "El nombre del proveedor es obligatorio.")]
@@ -19,6 +20,7 @@ public record class SupplierCreateDto
     public string? GeneralConditions { get; set; }
 }
 
+// Datos para actualizar un proveedor existente.
 public record class SupplierUpdateDto
 {
     [Required(ErrorMessage = "El nombre del proveedor es obligatorio.")]
@@ -36,6 +38,7 @@ public record class SupplierUpdateDto
     public string? GeneralConditions { get; set; }
 }
 
+// Proveedor en la vista resumida de los listados.
 public record class SupplierListDto
 {
     public int IdSupplier { get; set; }
@@ -47,6 +50,7 @@ public record class SupplierListDto
     public int SparePartCount { get; set; }
 }
 
+// Proveedor con el detalle de sus repuestos y ofertas.
 public record class SupplierDetailDto
 {
     public int IdSupplier { get; set; }
@@ -59,6 +63,7 @@ public record class SupplierDetailDto
     public int SparePartCount { get; set; }
 }
 
+// Filtros y paginación para consultar proveedores.
 public record class SupplierQueryDto
 {
     [StringLength(100, ErrorMessage = "El texto de búsqueda no puede superar 100 caracteres.")]
