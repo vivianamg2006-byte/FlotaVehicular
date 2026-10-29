@@ -26,6 +26,9 @@ public class AppDbContext : DbContext
     public DbSet<TechnicianSpecialty> TechnicianSpecialty { get; set; }
     public DbSet<MaintenanceOrder> MaintenanceOrder { get; set; }
 
+    // Usuarios internos del sistema.
+    public DbSet<User> User { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
