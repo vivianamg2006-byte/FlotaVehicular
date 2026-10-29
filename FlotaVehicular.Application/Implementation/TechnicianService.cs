@@ -127,13 +127,14 @@ public class TechnicianService : ITechnicianService
         if (technician is null)
             return Result<TechnicianDetailDto>.Failure(404, "Not Found", $"El técnico {id} no existe.");
 
-        if (!technician.IsActive)
+        if (!technician.IsActive && !technician.IsAvailable)
             return Result<TechnicianDetailDto>.Success(_mapper.Map<TechnicianDetailDto>(technician),
                 200, "OK", "El técnico ya estaba desactivado.");
 
         var entity = await _repository.GetForUpdateAsync(id);
-        // La baja lógica conserva el historial de órdenes asociadas.
+        // La baja lógica conserva el historial y retira al técnico de los disponibles.
         entity!.IsActive = false;
+        entity.IsAvailable = false;
 
         await _repository.SaveChangesAsync();
 
