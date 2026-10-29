@@ -246,6 +246,13 @@ public static class MapsterConfig
             .Ignore(dest => dest.IsActive)
             .Ignore(dest => dest.TechnicianSpecialties);
 
+        // Usuarios: los DTOs de respuesta no incluyen PasswordHash.
+        TypeAdapterConfig<User, UserListDto>
+            .NewConfig();
+
+        TypeAdapterConfig<User, UserDetailDto>
+            .NewConfig();
+
         // Órdenes de mantenimiento
         TypeAdapterConfig<MaintenanceOrder, MaintenanceOrderListDto>
             .NewConfig()
