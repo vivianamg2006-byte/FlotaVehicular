@@ -17,6 +17,10 @@ public class TechnicianConfiguration : IEntityTypeConfiguration<Technician>
         entity.HasIndex(e => e.IdentificationNumber)
             .IsUnique();
 
+        // El correo también es único para evitar técnicos duplicados.
+        entity.HasIndex(e => e.Email)
+            .IsUnique();
+
         entity.HasIndex(e => e.IsAvailable);
         entity.HasIndex(e => e.IsActive);
 
