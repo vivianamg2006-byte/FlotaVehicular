@@ -85,6 +85,16 @@ public class MaintenanceOrderRepository : IMaintenanceOrderRepository
         await _context.SaveChangesAsync();
     }
 
+    // La condición de estado evita sobrescribir una transición de otra solicitud.
+    // Estado y fecha de cierre se guardan juntos en una única operación SQL.
+    public async Task<bool> TryChangeStatusAsync(
+        int id, OrderStatus expectedStatus, OrderStatus newStatus, DateTime? closedDate)
+        => await _context.MaintenanceOrder
+            .Where(o => o.IdMaintenanceOrder == id && o.Status == expectedStatus)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(o => o.Status, newStatus)
+                .SetProperty(o => o.ClosedDate, closedDate)) == 1;
+
     public async Task SaveChangesAsync()
         => await _context.SaveChangesAsync();
 }

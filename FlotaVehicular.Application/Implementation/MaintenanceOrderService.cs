@@ -114,6 +114,57 @@ public class MaintenanceOrderService : IMaintenanceOrderService
             $"Orden {entity.OrderCode} creada.");
     }
 
+    // Actualiza únicamente el estado de la orden y su fecha de cierre.
+    public async Task<Result<MaintenanceOrderDetailDto>> ChangeStatusAsync(int id, MaintenanceOrderStatusDto status)
+    {
+        if (id < 1)
+            return Result<MaintenanceOrderDetailDto>.Failure(400, "Bad Request",
+                "El identificador de la orden debe ser mayor que cero.");
+
+        if (status.Status is null || !Enum.IsDefined(status.Status.Value))
+            return Result<MaintenanceOrderDetailDto>.Failure(400, "Bad Request",
+                "Indique un estado de orden válido.");
+
+        var order = await _repository.GetByIdAsync(id);
+        if (order is null)
+            return Result<MaintenanceOrderDetailDto>.Failure(404, "Not Found", $"La orden {id} no existe.");
+
+        var newStatus = status.Status.Value;
+        if (order.Status == newStatus)
+            return Result<MaintenanceOrderDetailDto>.Success(
+                _mapper.Map<MaintenanceOrderDetailDto>(order), 200, "OK",
+                "La orden ya tiene el estado indicado.");
+
+        if (!CanTransition(order.Status, newStatus))
+            return Result<MaintenanceOrderDetailDto>.Failure(409, "Conflict",
+                $"No se permite cambiar la orden de {order.Status} a {newStatus}.");
+
+        DateTime? closedDate = newStatus is OrderStatus.Completada or OrderStatus.Rechazada or OrderStatus.Cancelada
+            ? DateTime.UtcNow
+            : null;
+
+        if (!await _repository.TryChangeStatusAsync(id, order.Status, newStatus, closedDate))
+            return Result<MaintenanceOrderDetailDto>.Failure(409, "Conflict",
+                "La orden fue modificada por otra solicitud. Consulte su estado e intente nuevamente.");
+
+        var updated = await _repository.GetByIdAsync(id);
+        if (updated is null)
+            return Result<MaintenanceOrderDetailDto>.Failure(404, "Not Found", $"La orden {id} no existe.");
+
+        return Result<MaintenanceOrderDetailDto>.Success(
+            _mapper.Map<MaintenanceOrderDetailDto>(updated), 200, "OK", "Estado de la orden actualizado.");
+    }
+
+    private static bool CanTransition(OrderStatus current, OrderStatus next) => current switch
+    {
+        OrderStatus.Solicitada => next is OrderStatus.Diagnosticada or OrderStatus.Cancelada,
+        OrderStatus.Diagnosticada => next is OrderStatus.Aprobada or OrderStatus.Rechazada or OrderStatus.Cancelada,
+        OrderStatus.Aprobada => next is OrderStatus.EnEjecucion or OrderStatus.Cancelada,
+        OrderStatus.EnEjecucion => next is OrderStatus.EnEsperaDeRepuesto or OrderStatus.Completada or OrderStatus.Cancelada,
+        OrderStatus.EnEsperaDeRepuesto => next is OrderStatus.EnEjecucion or OrderStatus.Cancelada,
+        _ => false
+    };
+
     // El código OM-yyyyMMdd-0001 es único y consecutivo por día.
     private async Task<string> GenerateOrderCodeAsync(DateTime date)
     {

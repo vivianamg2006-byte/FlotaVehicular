@@ -15,5 +15,6 @@ public interface IMaintenanceOrderRepository
     Task<int> CountByDateAsync(DateTime date);
     Task<bool> ExistsOrderCodeAsync(string orderCode);
     Task AddAsync(MaintenanceOrder order);
+    Task<bool> TryChangeStatusAsync(int id, OrderStatus expectedStatus, OrderStatus newStatus, DateTime? closedDate);
     Task SaveChangesAsync();
 }

@@ -40,6 +40,15 @@ public class MaintenanceOrderController : ControllerBase
         return StatusCode(result.Status, result);
     }
 
+    // Cambia el estado respetando el ciclo de vida de la orden.
+    [HttpPut("{id:int}/status")]
+    public async Task<IActionResult> ChangeStatusAsync(
+        [FromRoute] int id, [FromBody] MaintenanceOrderStatusDto status)
+    {
+        var result = await _service.ChangeStatusAsync(id, status);
+        return StatusCode(result.Status, result);
+    }
+
     // Crea una orden de mantenimiento.
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] MaintenanceOrderCreateDto order)

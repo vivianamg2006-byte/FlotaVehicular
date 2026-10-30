@@ -10,4 +10,5 @@ public interface IMaintenanceOrderService
     Task<Result<IEnumerable<MaintenanceOrderListDto>>> GetAllAsync(MaintenanceOrderQueryDto query);
     Task<Result<MaintenanceOrderDetailDto>> GetByIdAsync(int id);
     Task<Result<MaintenanceOrderDetailDto>> AddAsync(MaintenanceOrderCreateDto order);
+    Task<Result<MaintenanceOrderDetailDto>> ChangeStatusAsync(int id, MaintenanceOrderStatusDto status);
 }

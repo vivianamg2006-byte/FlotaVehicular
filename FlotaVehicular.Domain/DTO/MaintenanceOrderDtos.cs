@@ -25,6 +25,14 @@ public record class MaintenanceOrderCreateDto
     public OrderPriority? Priority { get; set; }
 }
 
+// Estado solicitado para una orden existente; las transiciones se validan en el servicio.
+public record class MaintenanceOrderStatusDto
+{
+    [Required(ErrorMessage = "El estado es obligatorio.")]
+    [EnumDataType(typeof(OrderStatus), ErrorMessage = "El estado de la orden no es válido.")]
+    public OrderStatus? Status { get; set; }
+}
+
 // Orden de mantenimiento en la vista de listados.
 public record class MaintenanceOrderListDto
 {

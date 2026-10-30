@@ -350,8 +350,24 @@ Filtros: `idSparePart`, `idSupplier` y `search`.
 | GET | `/api/maintenanceorder/paged` | Consultar con paginación y filtros. |
 | GET | `/api/maintenanceorder/{id}` | Consultar el detalle de una solicitud. |
 | POST | `/api/maintenanceorder` | Crear una solicitud. |
+| PUT | `/api/maintenanceorder/{id}/status` | Cambiar el estado de una orden. |
 
 Filtros: `status`, `idVehicle`, `maintenanceType` y `priority`.
+
+El cambio de estado recibe, por ejemplo, `{"status":"Diagnosticada"}` y devuelve el detalle actualizado con HTTP 200. Las transiciones permitidas son:
+
+| Estado actual | Estados siguientes permitidos |
+|---|---|
+| Solicitada | Diagnosticada, Cancelada |
+| Diagnosticada | Aprobada, Rechazada, Cancelada |
+| Aprobada | EnEjecucion, Cancelada |
+| EnEjecucion | EnEsperaDeRepuesto, Completada, Cancelada |
+| EnEsperaDeRepuesto | EnEjecucion, Cancelada |
+| Completada, Rechazada, Cancelada | Ninguno: la orden está cerrada. |
+
+Repetir el estado actual responde 200 sin volver a modificar la orden. Al completar, rechazar o cancelar se registra `closedDate` en UTC. Un estado ausente o inválido responde 400; una orden inexistente, 404; una transición no permitida o un cambio concurrente, 409. El estado y la fecha se actualizan juntos comprobando el estado anterior para no sobrescribir otra transición. Esta operación solo cambia la orden; no cambia el estado ni el kilometraje del vehículo. No requiere una migración.
+
+Las pruebas específicas de este endpoint se ejecutan con `dotnet test verificacion/EstadosOrden.Tests/EstadosOrden.Tests.csproj --configuration Release`. Cubren las 64 combinaciones de estados, el flujo completo, la validación HTTP, la publicación en OpenAPI y la persistencia con protección ante cambios concurrentes. Usan una base SQLite temporal en memoria y un repositorio de prueba para HTTP; no modifican la base SQL Server configurada.
 
 ## Respuestas y validaciones
 
