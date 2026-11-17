@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using FlotaVehicular.Domain.DTO.PatternResult;
 using FlotaVehicular.Domain.Exceptions;
+using FlotaVehicular.WebAPI.Middleware;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,10 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+        // La bitácora reutiliza el mismo TraceId devuelto al cliente en los errores 500.
+        httpContext.Items[RequestLoggingMiddleware.TraceIdItemKey] = traceId;
+        httpContext.Items[RequestLoggingMiddleware.ExceptionItemKey] = exception;
 
         int status;
         string title;

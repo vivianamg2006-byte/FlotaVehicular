@@ -17,6 +17,7 @@ appsettings.*.Local.json
 !**/wwwroot/uploads/**/
 !**/wwwroot/uploads/vehicles/.gitkeep
 verificacion/archivos-prueba/
+FlotaVehicular.WebAPI/Logs/
 *.log
 *.mdf
 *.ldf
