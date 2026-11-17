@@ -19,6 +19,7 @@ public class MaintenanceOrderConfiguration : IEntityTypeConfiguration<Maintenanc
 
         entity.HasIndex(e => e.IdVehicle);
         entity.HasIndex(e => e.Status);
+        entity.HasIndex(e => e.CreatedByUserId);
 
         entity.Property(e => e.OrderCode)
             .HasMaxLength(20)
@@ -62,6 +63,12 @@ public class MaintenanceOrderConfiguration : IEntityTypeConfiguration<Maintenanc
         entity.HasOne(e => e.RequiredSpecialty)
             .WithMany(s => s.MaintenanceOrders)
             .HasForeignKey(e => e.IdRequiredSpecialty)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // La orden conserva al usuario creador; no se elimina en cascada.
+        entity.HasOne(e => e.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(e => e.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

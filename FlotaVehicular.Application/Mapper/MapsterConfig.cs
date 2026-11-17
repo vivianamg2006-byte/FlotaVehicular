@@ -262,7 +262,9 @@ public static class MapsterConfig
             .Map(dest => dest.Priority, src => src.Priority.ToString())
             .Map(dest => dest.Status, src => src.Status.ToString())
             .Map(dest => dest.RequiredSpecialtyName,
-                src => src.RequiredSpecialty != null ? src.RequiredSpecialty.Name : null);
+                src => src.RequiredSpecialty != null ? src.RequiredSpecialty.Name : null)
+            .Map(dest => dest.CreatedByUserName,
+                src => src.CreatedByUser != null ? src.CreatedByUser.FullName : "");
 
         TypeAdapterConfig<MaintenanceOrder, MaintenanceOrderDetailDto>
             .NewConfig()
@@ -274,7 +276,9 @@ public static class MapsterConfig
             .Map(dest => dest.Priority, src => src.Priority.ToString())
             .Map(dest => dest.Status, src => src.Status.ToString())
             .Map(dest => dest.RequiredSpecialtyName,
-                src => src.RequiredSpecialty != null ? src.RequiredSpecialty.Name : null);
+                src => src.RequiredSpecialty != null ? src.RequiredSpecialty.Name : null)
+            .Map(dest => dest.CreatedByUserName,
+                src => src.CreatedByUser != null ? src.CreatedByUser.FullName : "");
 
         TypeAdapterConfig<MaintenanceOrderCreateDto, MaintenanceOrder>
             .NewConfig()
@@ -286,6 +290,8 @@ public static class MapsterConfig
             .Ignore(dest => dest.Status)
             .Ignore(dest => dest.CreatedAt)
             .Ignore(dest => dest.Vehicle)
-            .Ignore(dest => dest.RequiredSpecialty);
+            .Ignore(dest => dest.RequiredSpecialty)
+            .Ignore(dest => dest.CreatedByUserId)
+            .Ignore(dest => dest.CreatedByUser);
     }
 }

@@ -58,7 +58,8 @@ public class MaintenanceOrderService : IMaintenanceOrderService
     }
 
     // Crea una orden de mantenimiento.
-    public async Task<Result<MaintenanceOrderDetailDto>> AddAsync(MaintenanceOrderCreateDto order)
+    public async Task<Result<MaintenanceOrderDetailDto>> AddAsync(
+        MaintenanceOrderCreateDto order, int createdByUserId)
     {
         var vehicle = await _repository.GetVehicleAsync(order.IdVehicle);
 
@@ -100,6 +101,9 @@ public class MaintenanceOrderService : IMaintenanceOrderService
         entity.Reason = order.Reason!.Trim();
         entity.RequestDate = now;
         entity.CreatedAt = now;
+
+        // La identidad del creador la impone el token, nunca el cuerpo de la petición.
+        entity.CreatedByUserId = createdByUserId;
 
         // Toda orden nace en estado Solicitada.
         entity.Status = OrderStatus.Solicitada;

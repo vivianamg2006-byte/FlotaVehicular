@@ -23,6 +23,9 @@ public record class MaintenanceOrderCreateDto
 
     [Required(ErrorMessage = "La prioridad es obligatoria.")]
     public OrderPriority? Priority { get; set; }
+
+    // Se acepta por contrato, pero la API lo sustituye por el usuario del token.
+    public int? CreatedByUserId { get; set; }
 }
 
 // Estado solicitado para una orden existente; las transiciones se validan en el servicio.
@@ -52,6 +55,8 @@ public record class MaintenanceOrderListDto
     public decimal TotalCost { get; set; }
     public string Status { get; set; } = "";
     public DateTime CreatedAt { get; set; }
+    public int? CreatedByUserId { get; set; }
+    public string CreatedByUserName { get; set; } = "";
 }
 
 // Orden de mantenimiento con el detalle de la unidad que la recibió.
@@ -75,6 +80,8 @@ public record class MaintenanceOrderDetailDto
     public decimal TotalCost { get; set; }
     public string Status { get; set; } = "";
     public DateTime CreatedAt { get; set; }
+    public int? CreatedByUserId { get; set; }
+    public string CreatedByUserName { get; set; } = "";
 }
 
 // Filtros y paginación para consultar órdenes de mantenimiento.
@@ -84,6 +91,7 @@ public record class MaintenanceOrderQueryDto
     public int? IdVehicle { get; set; }
     public MaintenanceType? MaintenanceType { get; set; }
     public OrderPriority? Priority { get; set; }
+    public int? CreatedByUserId { get; set; }
 
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 10;

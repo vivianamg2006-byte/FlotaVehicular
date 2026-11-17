@@ -42,9 +42,15 @@ public class MaintenanceOrder
     // Marca de tiempo de creación de la orden.
     public DateTime CreatedAt { get; set; }
 
+    // Usuario que registró la solicitud; es opcional para las órdenes históricas.
+    public int? CreatedByUserId { get; set; }
+
     // Unidad que recibe el mantenimiento.
     public virtual Vehicle Vehicle { get; set; } = null!;
 
     // Especialidad requerida para el trabajo, cuando aplica.
     public virtual Specialty? RequiredSpecialty { get; set; }
+
+    // Usuario autenticado que creó la orden.
+    public virtual User? CreatedByUser { get; set; }
 }

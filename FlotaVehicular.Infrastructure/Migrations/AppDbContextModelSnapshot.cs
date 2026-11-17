@@ -38,6 +38,9 @@ namespace FlotaVehicular.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("(SYSUTCDATETIME())");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("IdRequiredSpecialty")
                         .HasColumnType("int");
 
@@ -83,6 +86,8 @@ namespace FlotaVehicular.Infrastructure.Migrations
                         .HasDefaultValue(0m);
 
                     b.HasKey("IdMaintenanceOrder");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("IdRequiredSpecialty");
 
@@ -542,6 +547,11 @@ namespace FlotaVehicular.Infrastructure.Migrations
 
             modelBuilder.Entity("FlotaVehicular.Domain.Entities.MaintenanceOrder", b =>
                 {
+                    b.HasOne("FlotaVehicular.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("FlotaVehicular.Domain.Entities.Specialty", "RequiredSpecialty")
                         .WithMany("MaintenanceOrders")
                         .HasForeignKey("IdRequiredSpecialty")
@@ -552,6 +562,8 @@ namespace FlotaVehicular.Infrastructure.Migrations
                         .HasForeignKey("IdVehicle")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("CreatedByUser");
 
                     b.Navigation("RequiredSpecialty");
 

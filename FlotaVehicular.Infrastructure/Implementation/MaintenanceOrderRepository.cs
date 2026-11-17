@@ -30,6 +30,9 @@ public class MaintenanceOrderRepository : IMaintenanceOrderRepository
         if (filters.Priority.HasValue)
             query = query.Where(o => o.Priority == filters.Priority.Value);
 
+        if (filters.CreatedByUserId.HasValue)
+            query = query.Where(o => o.CreatedByUserId == filters.CreatedByUserId.Value);
+
         return query;
     }
 
@@ -37,7 +40,8 @@ public class MaintenanceOrderRepository : IMaintenanceOrderRepository
         => _context.MaintenanceOrder
             .AsNoTracking()
             .Include(o => o.Vehicle)
-            .Include(o => o.RequiredSpecialty);
+            .Include(o => o.RequiredSpecialty)
+            .Include(o => o.CreatedByUser);
 
     public async Task<IEnumerable<MaintenanceOrder>> GetPagedAsync(MaintenanceOrderQueryDto query)
         => await ApplyFilters(BaseQuery(), query)
