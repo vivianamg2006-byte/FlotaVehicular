@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints del catálogo de repuestos y su nivel de stock.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/sparepart")]
 [ApiController]
 public class SparePartController : ControllerBase
@@ -49,6 +52,7 @@ public class SparePartController : ControllerBase
     }
 
     // Registra un repuesto nuevo.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SparePartCreateDto sparePart)
     {
@@ -60,6 +64,7 @@ public class SparePartController : ControllerBase
     }
 
     // Actualiza un repuesto existente.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] SparePartUpdateDto sparePart)
     {
@@ -68,6 +73,7 @@ public class SparePartController : ControllerBase
     }
 
     // Elimina un repuesto que no tiene proveedores asociados.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de categorías de vehículos y sus vehículos asociados.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/vehiclecategory")]
 [ApiController]
 public class VehicleCategoryController : ControllerBase
@@ -41,6 +44,7 @@ public class VehicleCategoryController : ControllerBase
     }
 
     // Registra una categoría nueva.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] VehicleCategoryCreateDto category)
     {
@@ -52,6 +56,7 @@ public class VehicleCategoryController : ControllerBase
     }
 
     // Actualiza una categoría existente.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] VehicleCategoryUpdateDto category)
     {
@@ -60,6 +65,7 @@ public class VehicleCategoryController : ControllerBase
     }
 
     // Elimina una categoría que no tiene vehículos asociados.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

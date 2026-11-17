@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de vehículos: catálogo, filtros, mantenimiento preventivo y baja lógica.
+[Authorize]
 [Route("api/vehicle")]
 [ApiController]
 public class VehicleController : ControllerBase
@@ -41,6 +44,7 @@ public class VehicleController : ControllerBase
     }
 
     // Registra un vehículo nuevo; nace en estado operativo.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] VehicleCreateDto vehicle)
     {
@@ -52,6 +56,7 @@ public class VehicleController : ControllerBase
     }
 
     // Actualiza un vehículo que no está dado de baja.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] VehicleUpdateDto vehicle)
     {
@@ -60,6 +65,7 @@ public class VehicleController : ControllerBase
     }
 
     // Cambia el estado operativo de un vehículo.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}/status")]
     public async Task<IActionResult> ChangeStatusAsync([FromRoute] int id, [FromBody] VehicleStatusDto status)
     {
@@ -68,6 +74,7 @@ public class VehicleController : ControllerBase
     }
 
     // Esta operación da de baja el vehículo; no elimina la fila.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeactivateAsync(int id)
     {

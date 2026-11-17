@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de las asociaciones entre técnicos y especialidades.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/technicianspecialty")]
 [ApiController]
 public class TechnicianSpecialtyController : ControllerBase
@@ -41,6 +44,7 @@ public class TechnicianSpecialtyController : ControllerBase
     }
 
     // Asocia un técnico con una especialidad.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] TechnicianSpecialtyCreateDto link)
     {
@@ -53,6 +57,7 @@ public class TechnicianSpecialtyController : ControllerBase
     }
 
     // Actualiza la certificación de la asociación.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{idTechnician:int}/{idSpecialty:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int idTechnician, [FromRoute] int idSpecialty,
         [FromBody] TechnicianSpecialtyUpdateDto link)
@@ -62,6 +67,7 @@ public class TechnicianSpecialtyController : ControllerBase
     }
 
     // Desasocia una especialidad del técnico.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{idTechnician:int}/{idSpecialty:int}")]
     public async Task<IActionResult> DeleteAsync(int idTechnician, int idSpecialty)
     {

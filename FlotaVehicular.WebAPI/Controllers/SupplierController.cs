@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de proveedores de repuestos.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/supplier")]
 [ApiController]
 public class SupplierController : ControllerBase
@@ -41,6 +44,7 @@ public class SupplierController : ControllerBase
     }
 
     // Registra un proveedor nuevo.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SupplierCreateDto supplier)
     {
@@ -52,6 +56,7 @@ public class SupplierController : ControllerBase
     }
 
     // Actualiza un proveedor existente.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] SupplierUpdateDto supplier)
     {
@@ -60,6 +65,7 @@ public class SupplierController : ControllerBase
     }
 
     // Desactiva un proveedor conservando sus repuestos.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}/deactivate")]
     public async Task<IActionResult> DeactivateAsync(int id)
     {
@@ -68,6 +74,7 @@ public class SupplierController : ControllerBase
     }
 
     // Reactiva un proveedor desactivado.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}/activate")]
     public async Task<IActionResult> ActivateAsync(int id)
     {
@@ -76,6 +83,7 @@ public class SupplierController : ControllerBase
     }
 
     // Elimina un proveedor que no tiene repuestos asociados.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

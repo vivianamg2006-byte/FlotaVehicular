@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de especialidades de mantenimiento.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/specialty")]
 [ApiController]
 public class SpecialtyController : ControllerBase
@@ -41,6 +44,7 @@ public class SpecialtyController : ControllerBase
     }
 
     // Registra una especialidad nueva.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SpecialtyCreateDto specialty)
     {
@@ -52,6 +56,7 @@ public class SpecialtyController : ControllerBase
     }
 
     // Actualiza una especialidad existente.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] SpecialtyUpdateDto specialty)
     {
@@ -60,6 +65,7 @@ public class SpecialtyController : ControllerBase
     }
 
     // Elimina una especialidad que no tiene técnicos asociados.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

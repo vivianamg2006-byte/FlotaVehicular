@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de las ofertas de compra entre repuestos y proveedores.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/sparepartsupplier")]
 [ApiController]
 public class SparePartSupplierController : ControllerBase
@@ -41,6 +44,7 @@ public class SparePartSupplierController : ControllerBase
     }
 
     // Registra una oferta entre un repuesto y un proveedor.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] SparePartSupplierCreateDto link)
     {
@@ -53,6 +57,7 @@ public class SparePartSupplierController : ControllerBase
     }
 
     // Actualiza las condiciones de la oferta.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{idSparePart:int}/{idSupplier:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int idSparePart, [FromRoute] int idSupplier,
         [FromBody] SparePartSupplierUpdateDto link)
@@ -62,6 +67,7 @@ public class SparePartSupplierController : ControllerBase
     }
 
     // Elimina la oferta entre repuesto y proveedor.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpDelete("{idSparePart:int}/{idSupplier:int}")]
     public async Task<IActionResult> DeleteAsync(int idSparePart, int idSupplier)
     {

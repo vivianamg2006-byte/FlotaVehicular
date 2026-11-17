@@ -1,10 +1,13 @@
 using FlotaVehicular.Application.Interfaces;
 using FlotaVehicular.Domain.DTO;
+using FlotaVehicular.WebAPI.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlotaVehicular.WebAPI.Controllers;
 
 // Endpoints de técnicos y sus especialidades.
+[Authorize(Roles = AppRoles.AdminOrCoordinator)]
 [Route("api/technician")]
 [ApiController]
 public class TechnicianController : ControllerBase
@@ -49,6 +52,7 @@ public class TechnicianController : ControllerBase
     }
 
     // Registra un técnico nuevo.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPost]
     public async Task<IActionResult> AddAsync([FromBody] TechnicianCreateDto technician)
     {
@@ -60,6 +64,7 @@ public class TechnicianController : ControllerBase
     }
 
     // Actualiza un técnico existente.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] TechnicianUpdateDto technician)
     {
@@ -68,6 +73,7 @@ public class TechnicianController : ControllerBase
     }
 
     // Desactiva un técnico conservando sus asociaciones.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}/deactivate")]
     public async Task<IActionResult> DeactivateAsync(int id)
     {
@@ -76,6 +82,7 @@ public class TechnicianController : ControllerBase
     }
 
     // Reactiva un técnico desactivado.
+    [Authorize(Roles = AppRoles.Administrator)]
     [HttpPut("{id:int}/activate")]
     public async Task<IActionResult> ActivateAsync(int id)
     {
