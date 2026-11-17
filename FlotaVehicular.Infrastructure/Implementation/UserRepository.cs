@@ -49,6 +49,11 @@ public class UserRepository : IUserRepository
         => await _context.User
             .FirstOrDefaultAsync(u => u.IdUser == id);
 
+    // Busca por nombre de usuario o correo y mantiene la entidad trackeada para actualizar el acceso.
+    public async Task<User?> GetByLoginForUpdateAsync(string login)
+        => await _context.User
+            .FirstOrDefaultAsync(u => u.Username == login || u.Email == login);
+
     public async Task<bool> ExistsByUsernameAsync(string username, int? excludeId = null)
         => await _context.User
             .AnyAsync(u => u.Username == username

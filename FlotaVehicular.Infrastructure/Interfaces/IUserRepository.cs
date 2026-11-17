@@ -10,6 +10,7 @@ public interface IUserRepository
     Task<int> CountAsync(UserQueryDto query);
     Task<User?> GetByIdAsync(int id);
     Task<User?> GetForUpdateAsync(int id);
+    Task<User?> GetByLoginForUpdateAsync(string login);
     Task<bool> ExistsByUsernameAsync(string username, int? excludeId = null);
     Task<bool> ExistsByEmailAsync(string email, int? excludeId = null);
     Task<int> CountActiveAdministratorsAsync();
