@@ -6,18 +6,52 @@ namespace FlotaVehicular.Infrastructure.Data.Seed;
 // Carga los registros iniciales de la flota en la base de datos.
 public static class FleetSeeder
 {
-    // Inserta el catálogo base y persiste los cambios.
-    public static void Seed(DbContext context)
+    // Inserta el catálogo base, los usuarios iniciales y persiste los cambios.
+    public static void Seed(DbContext context, Func<string, string> hashPassword)
     {
         SeedCatalogs(context);
+        SeedUsers(context, hashPassword);
         context.SaveChanges();
     }
 
     // Variante asíncrona del alta de los datos iniciales.
-    public static async Task SeedAsync(DbContext context, CancellationToken ct = default)
+    public static async Task SeedAsync(
+        DbContext context, Func<string, string> hashPassword, CancellationToken ct = default)
     {
         SeedCatalogs(context);
+        SeedUsers(context, hashPassword);
         await context.SaveChangesAsync(ct);
+    }
+
+    // Usuarios de desarrollo, uno por rol; el hasher es el mismo que usa la API.
+    private static void SeedUsers(DbContext context, Func<string, string> hashPassword)
+    {
+        var users = context.Set<User>();
+
+        var userSeeds = new (string Username, string Password, string FullName, string Email, UserRole Role)[]
+        {
+            ("admin", "Admin123!", "Administrador", "admin@flota.local", UserRole.Administrador),
+            ("coordinador", "Coord123!", "Coordinador/Técnico", "coordinador@flota.local", UserRole.CoordinadorTecnico),
+            ("solicitante", "Solic123!", "Solicitante/Consulta", "solicitante@flota.local", UserRole.SolicitanteConsulta)
+        };
+
+        // La comprobación por usuario o correo mantiene la idempotencia de la semilla.
+        foreach (var seed in userSeeds)
+        {
+            if (users.Any(u => u.Username == seed.Username || u.Email == seed.Email))
+                continue;
+
+            users.Add(new User
+            {
+                Username = seed.Username,
+                Email = seed.Email,
+                FullName = seed.FullName,
+                Role = seed.Role,
+                PasswordHash = hashPassword(seed.Password),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
     }
 
     // Puebla las tablas de catálogos, vehículos, técnicos y órdenes de ejemplo.
