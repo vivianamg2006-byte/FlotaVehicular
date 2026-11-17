@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json.Serialization;
 using FlotaVehicular.Application.Implementation;
 using FlotaVehicular.Application.Interfaces;
@@ -7,11 +9,17 @@ using FlotaVehicular.Infrastructure.Data;
 using FlotaVehicular.Infrastructure.Data.Seed;
 using FlotaVehicular.Infrastructure.Implementation;
 using FlotaVehicular.Infrastructure.Interfaces;
+using FlotaVehicular.Infrastructure.Logger;
+using FlotaVehicular.WebAPI.Filters;
 using FlotaVehicular.WebAPI.Handlers;
+using FlotaVehicular.WebAPI.Middleware;
+using FlotaVehicular.WebAPI.Security;
 using Mapster;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 // Punto de partida de la API: aquí se registran los servicios y el pipeline de la respuesta.
@@ -21,7 +29,11 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 // Los errores de validación usan el mismo formato que las demás respuestas.
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Los Result de error quedan disponibles para la bitácora de peticiones.
+        options.Filters.Add<ResultLoggingFilter>();
+    })
     .AddJsonOptions(options =>
     {
         // Los enums se envían como texto y las propiedades se serializan en camelCase.
@@ -51,18 +63,63 @@ builder.Services.AddControllers()
 // Documentación OpenAPI de los endpoints de la API.
 builder.Services.AddOpenApi();
 
+// Configuración JWT: la ausencia de la sección o una clave corta impide arrancar la API.
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
+    ?? throw new InvalidOperationException(
+        "Falta la sección 'Jwt'. Configúrela en appsettings, user-secrets o la variable Jwt__SecretKey.");
+
+if (!JwtSettings.HasValidKeyLength(jwtSettings.SecretKey))
+    throw new InvalidOperationException(
+        "Jwt:SecretKey debe tener al menos 32 bytes. Configúrela en appsettings, user-secrets o la variable Jwt__SecretKey.");
+
+// Autenticación Bearer con validación de emisor, audiencia, firma y vencimiento.
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Los claims se consumen con los mismos tipos con los que se emitieron.
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+            NameClaimType = ClaimTypes.NameIdentifier,
+            RoleClaimType = ClaimTypes.Role
+        };
+    });
+builder.Services.AddAuthorization();
+
+// CORS para los orígenes del frontend; si no se configuran, se usan los dos locales.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+if (allowedOrigins is null || allowedOrigins.Length == 0)
+    allowedOrigins = ["http://localhost:5173", "http://localhost:3000"];
+
+builder.Services.AddCors(options =>
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins(allowedOrigins)
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
+
 // Esta conexión apunta a la base de datos de la flota.
 var connectionString = builder.Configuration.GetConnectionString("FlotaVehicular")
     ?? throw new InvalidOperationException(
         "Falta la cadena de conexión 'FlotaVehicular'. Configúrela en appsettings, user-secrets o la variable ConnectionStrings__FlotaVehicular.");
 
+// El mismo hasher de la API genera los hashes de los usuarios iniciales.
+var seedPasswordHasher = new Pbkdf2PasswordHasher();
+
 // EF Core con SQL Server, y la semilla que se ejecuta sobre la base de datos.
 builder.Services.AddDbContext<AppDbContext>(options => options
     .UseSqlServer(connectionString)
 
-    .UseSeeding((context, _) => FleetSeeder.Seed(context))
+    .UseSeeding((context, _) => FleetSeeder.Seed(context, seedPasswordHasher.Hash))
 
-    .UseAsyncSeeding(async (context, _, ct) => await FleetSeeder.SeedAsync(context, ct)));
+    .UseAsyncSeeding(async (context, _, ct) => await FleetSeeder.SeedAsync(context, seedPasswordHasher.Hash, ct)));
 
 // Registrar los mapeos entre entidades y DTO.
 MapsterConfig.RegisterMaps();
@@ -98,6 +155,11 @@ builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// Seguridad: la configuración y el generador de tokens viven durante toda la aplicación.
+builder.Services.AddSingleton(jwtSettings);
+builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 // Las imágenes se guardan en disco y su referencia queda en la base de datos.
 var imagesRelativePath = builder.Configuration["Storage:VehicleImagesPath"] ?? "wwwroot/uploads/vehicles";
 var publicPrefix = imagesRelativePath
@@ -108,28 +170,54 @@ var publicPrefix = imagesRelativePath
 builder.Services.AddSingleton<IImageStorage>(_ =>
     new LocalImageStorage(builder.Environment.ContentRootPath, imagesRelativePath, publicPrefix));
 
+// Bitácora de peticiones en la carpeta configurada, relativa a la WebAPI.
+var requestLogDirectory = builder.Configuration["RequestLog:Directory"] ?? "Logs";
+var requestLogPath = Path.IsPathRooted(requestLogDirectory)
+    ? requestLogDirectory
+    : Path.Combine(builder.Environment.ContentRootPath, requestLogDirectory);
+builder.Services.AddSingleton<IFileLogger>(new FileRequestLogger(requestLogPath));
+
 // Se construye la aplicación y se registra el manejo de errores HTTP.
 var app = builder.Build();
 
+// Los archivos estáticos se sirven antes de la bitácora y por eso no generan registros.
+app.UseStaticFiles();
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseCors("Frontend");
 app.UseExceptionHandler();
 app.UseStatusCodePages(async statusCodeContext =>
 {
     var httpContext = statusCodeContext.HttpContext;
     var statusCode = httpContext.Response.StatusCode;
-    string title = statusCode switch
-    {
-        404 => "Not Found",
-        405 => "Method Not Allowed",
-        _ => "Error"
-    };
-    string detail = statusCode switch
-    {
-        404 => "Recurso no encontrado.",
-        405 => "Método no permitido.",
-        _ => "Solicitud no válida."
-    };
+    string title;
+    string detail;
 
-    var result = FlotaVehicular.Domain.DTO.PatternResult.Result<object>.Failure(statusCode, title, detail);
+    switch (statusCode)
+    {
+        case StatusCodes.Status401Unauthorized:
+            title = "Unauthorized";
+            detail = "Sesión no válida o expirada. Inicie sesión nuevamente.";
+            break;
+        case StatusCodes.Status403Forbidden:
+            title = "Forbidden";
+            detail = "No tiene permisos para realizar esta acción.";
+            break;
+        case StatusCodes.Status404NotFound:
+            title = "Not Found";
+            detail = "Recurso no encontrado.";
+            break;
+        case StatusCodes.Status405MethodNotAllowed:
+            title = "Method Not Allowed";
+            detail = "Método no permitido.";
+            break;
+        default:
+            title = "Error";
+            detail = "Solicitud no válida.";
+            break;
+    }
+
+    var result = Result<object>.Failure(statusCode, title, detail);
+    httpContext.Items[RequestLoggingMiddleware.ErrorItemKey] = result;
     httpContext.Response.ContentType = "application/json; charset=utf-8";
     await httpContext.Response.WriteAsJsonAsync(result);
 });
@@ -141,8 +229,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.UseStaticFiles();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
