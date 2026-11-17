@@ -95,6 +95,7 @@ El esquema se define con las entidades y sus configuraciones de EF Core, y se ac
 | `InitialCreate` | Categorías, vehículos, imágenes, repuestos, proveedores y asociaciones repuesto-proveedor. |
 | `AddTechniciansSpecialtiesOrders` | Técnicos, especialidades, asociaciones técnico-especialidad y órdenes de mantenimiento. |
 | `AddTechnicianEmailUniqueIndex` | Índice único para el correo de los técnicos. |
+| `AddOrderCreatedByUser` | Columna opcional `CreatedByUserId` en órdenes, con llave foránea a usuarios y eliminación `Restrict`. |
 
 Al aplicar las migraciones también se ejecuta `FleetSeeder`, registrado mediante `UseSeeding` y `UseAsyncSeeding`. La API no aplica migraciones al iniciar.
 
@@ -112,6 +113,85 @@ El perfil `http` utiliza el entorno `Development` y la dirección `http://localh
 - [Especificación OpenAPI](http://localhost:5137/openapi/v1.json)
 
 Scalar permite consultar los contratos de entrada y salida y realizar solicitudes a los endpoints. La documentación se habilita al ejecutar en desarrollo.
+
+## Autenticación y roles
+
+La API usa tokens JWT Bearer. El inicio de sesión es público; el resto de `/api` exige un token válido, excepto la descarga pública de imágenes. La clave se configura en `Jwt:SecretKey` (mínimo 32 bytes), con `Jwt:Issuer`, `Jwt:Audience` y `Jwt:ExpirationMinutes` (60). Para no versionar secretos se puede usar user-secrets o la variable `Jwt__SecretKey`.
+
+### Endpoints de autenticación
+
+| Método | Ruta | Acceso | Operación |
+|---|---|---|---|
+| POST | `/api/auth/login` | Público | Inicia sesión con `username` o `email` y `password`. |
+| POST | `/api/auth/logout` | Autenticado | Cierra la sesión; el cliente descarta el token y la llamada queda en la bitácora. |
+| GET | `/api/auth/me` | Autenticado | Devuelve el usuario vigente del token. |
+
+### Respuesta del login
+
+```json
+{
+  "isSuccess": true,
+  "status": 200,
+  "title": "OK",
+  "detail": "Sesión iniciada.",
+  "data": {
+    "token": "eyJ...",
+    "tokenType": "Bearer",
+    "expiresAt": "2026-11-17T20:00:00Z",
+    "expiresInSeconds": 3600,
+    "user": {
+      "idUser": 1,
+      "fullName": "Administrador",
+      "username": "admin",
+      "email": "admin@flota.local",
+      "role": "Administrador"
+    }
+  }
+}
+```
+
+`data.user` nunca incluye el hash de la contraseña. Un usuario inexistente y una contraseña incorrecta devuelven el mismo 401: `Usuario o contraseña incorrectos.`
+
+### Códigos 401 y 403
+
+| Código | Situación | Detalle |
+|---|---|---|
+| 401 | Falta el token, es inválido, expiró o la sesión ya no es válida. | `Sesión no válida o expirada. Inicie sesión nuevamente.` |
+| 401 | Credenciales incorrectas. | `Usuario o contraseña incorrectos.` |
+| 401 | El usuario del token ya no existe o está inactivo. | `La sesión ya no es válida. Inicie sesión nuevamente.` |
+| 403 | El rol autenticado no tiene permiso para la acción. | `No tiene permisos para realizar esta acción.` |
+| 403 | La cuenta está desactivada al iniciar sesión. | `La cuenta está desactivada. Comuníquese con un administrador.` |
+
+### Tabla de permisos
+
+| Recurso | Consultar | Crear, editar, cambiar estado o eliminar |
+|---|---|---|
+| `/api/auth` | Cualquier autenticado (`me`); `login` es público | No aplica; `logout` es cualquier autenticado |
+| `/api/vehicle` | Cualquier autenticado | Solo Administrador |
+| `/api/vehicle/{id}/images` | Listado: cualquier autenticado; archivo: público | Solo Administrador |
+| `/api/vehiclecategory` | Administrador o Coordinador | Solo Administrador |
+| `/api/technician` | Administrador o Coordinador | Solo Administrador |
+| `/api/specialty` | Administrador o Coordinador | Solo Administrador |
+| `/api/technicianspecialty` | Administrador o Coordinador | Solo Administrador |
+| `/api/sparepart` | Administrador o Coordinador | Solo Administrador |
+| `/api/supplier` | Administrador o Coordinador | Solo Administrador |
+| `/api/sparepartsupplier` | Administrador o Coordinador | Solo Administrador |
+| `/api/user` | Solo Administrador | Solo Administrador |
+| `/api/maintenanceorder` | Cualquier autenticado | POST: Administrador o Solicitante; cambio de estado: Administrador o Coordinador |
+
+El Solicitante solo consulta las órdenes que creó: una orden ajena responde 404 con `La orden {id} no existe.` El creador se toma del claim del token, nunca del cuerpo; el listado y el detalle devuelven `createdByUserId` y `createdByUserName`.
+
+## CORS
+
+La política `Frontend` permite los orígenes de `Cors:AllowedOrigins` (`http://localhost:5173` y `http://localhost:3000` por defecto), cualquier encabezado y cualquier método HTTP. No se habilita el envío de credenciales: el token se envía en el encabezado `Authorization`.
+
+## Bitácora de peticiones
+
+Cada llamada a `/api` genera un archivo `.txt` en `FlotaVehicular.WebAPI/Logs`, configurable con `RequestLog:Directory`. La carpeta se crea automáticamente y está excluida de Git. El nombre sigue el patrón `yyyyMMdd_HHmmss_fff_METODO_ruta_estado_codigo.txt`, por ejemplo `20261030_194855_123_GET_api-vehicle-5_200_a1b2c3.txt`.
+
+Cada archivo registra fecha y hora, TraceId, método, ruta, parámetros de consulta, código HTTP, resultado, duración en milisegundos, IP del cliente, usuario y rol (o `anónimo`) y, cuando falló, el `Result` de error o la excepción con su stack trace. En errores 500 el TraceId coincide con `data.traceId` de la respuesta.
+
+No se registran el cuerpo de la petición ni el encabezado `Authorization`, por lo que no aparecen contraseñas ni tokens. Tampoco se registran Scalar, OpenAPI, archivos estáticos ni las consultas previas de CORS.
 
 ## Datos iniciales
 
@@ -136,6 +216,18 @@ Los vehículos incluyen ejemplos de los cuatro estados: cinco operativos, dos en
 Las órdenes iniciales incluyen distintos estados como datos de ejemplo. Las solicitudes creadas desde la API nacen en estado `Solicitada` y con costo total en cero.
 
 Las imágenes se agregan mediante sus endpoints y se almacenan en disco; el seeder no carga archivos de imagen.
+
+### Usuarios iniciales (solo desarrollo)
+
+`FleetSeeder` también crea un usuario por rol si todavía no existe por nombre de usuario o correo. Las credenciales son solo para desarrollo y deben cambiarse con `PUT /api/user/{id}/password`:
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `admin` | `Admin123!` | Administrador |
+| `coordinador` | `Coord123!` | Coordinador/Técnico |
+| `solicitante` | `Solic123!` | Solicitante/Consulta |
+
+Los hash se generan con el mismo PBKDF2-SHA256 que utiliza la API para los usuarios creados desde los endpoints.
 
 ## Modelo de datos y relaciones
 
@@ -352,7 +444,7 @@ Filtros: `idSparePart`, `idSupplier` y `search`.
 | POST | `/api/maintenanceorder` | Crear una solicitud. |
 | PUT | `/api/maintenanceorder/{id}/status` | Cambiar el estado de una orden. |
 
-Filtros: `status`, `idVehicle`, `maintenanceType` y `priority`.
+Filtros: `status`, `idVehicle`, `maintenanceType`, `priority` y `createdByUserId`.
 
 El cambio de estado recibe, por ejemplo, `{"status":"Diagnosticada"}` y devuelve el detalle actualizado con HTTP 200. Las transiciones permitidas son:
 
